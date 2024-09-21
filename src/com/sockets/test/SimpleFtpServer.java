@@ -1,5 +1,6 @@
 package com.sockets.test;
 
+import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.UserManager;
@@ -17,29 +18,38 @@ import java.util.Collections;
 
 public class SimpleFtpServer {
 
+    private final int ftpPort;
+    private final int passiveStartPort;
+    private final int passiveEndPort;
     private FtpServer server;
+
+    public SimpleFtpServer(int ftpPort, int passiveStartPort, int passiveEndPort) {
+        this.ftpPort = ftpPort;
+        this.passiveStartPort = passiveStartPort;
+        this.passiveEndPort = passiveEndPort;
+    }
 
     public void start() {
         FtpServerFactory serverFactory = new FtpServerFactory();
         ListenerFactory factory = new ListenerFactory();
-        factory.setPort(21); // Установите порт для FTP сервера
-
+        DataConnectionConfigurationFactory dataConFactory = new DataConnectionConfigurationFactory();
+        dataConFactory.setPassivePorts(passiveStartPort + "-" + passiveEndPort);
+        factory.setDataConnectionConfiguration(dataConFactory.createDataConnectionConfiguration());
+        factory.setPort(ftpPort); // Установите порт для FTP сервера
         serverFactory.addListener("default", factory.createListener());
 
         PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
-        File userPropertiesFile = new File("c:\\wamp\\www\\server\\users.properties");
+        File userPropertiesFile = new File("users.properties");
 
         // Создание директории и файла, если они не существуют
         if (!userPropertiesFile.exists()) {
             try {
-                Files.createDirectories(userPropertiesFile.getParentFile().toPath());
                 Files.createFile(userPropertiesFile.toPath());
             } catch (IOException e) {
                 System.err.println("Ошибка при создании директории или файла: " + e.getMessage());
                 return;
             }
         }
-
         userManagerFactory.setFile(userPropertiesFile);
         userManagerFactory.setPasswordEncryptor(new ClearTextPasswordEncryptor());
 
@@ -85,7 +95,6 @@ public class SimpleFtpServer {
         serverFactory.setUserManager(um);
 
         server = serverFactory.createServer();
-
         try {
             server.start();
             System.out.println("FTP started on port: " + factory.getPort());

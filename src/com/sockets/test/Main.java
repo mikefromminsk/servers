@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            SimpleFtpServer ftpServer = new SimpleFtpServer();
+            SimpleFtpServer ftpServer = new SimpleFtpServer(21, 50000, 50100);
             ftpServer.start();
             SimpleHttpServer httpServer = new SimpleHttpServer();
             httpServer.start();
