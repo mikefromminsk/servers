@@ -20,20 +20,26 @@ import static com.sockets.test.Sockets.log;
 
 public class SimpleHttpServer {
 
+    int port;
+
+    public SimpleHttpServer(int port) {
+        this.port = port;
+    }
+
     static Gson json = new Gson();
 
     public void start() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8002), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/test", new MyHandler());
         server.setExecutor(null);
         server.start();
-        log("Http started on port: 8002");
+        log("Http started on port: " + port);
     }
 
     static class MyHandler implements HttpHandler {
         @Override
-        public void handle(HttpExchange t) throws IOException {
-            String requestBody = new BufferedReader(new InputStreamReader(t.getRequestBody()))
+        public void handle(HttpExchange request) throws IOException {
+            String requestBody = new BufferedReader(new InputStreamReader(request.getRequestBody()))
                     .lines().collect(Collectors.joining("\n"));
 
             Message message = json.fromJson(requestBody, Message.class);
@@ -43,6 +49,7 @@ public class SimpleHttpServer {
                     WebSocket conn = iterator.next();
                     if (conn.isOpen()) {
                         conn.send(requestBody);
+                        log("sent: " + requestBody);
                     } else {
                         iterator.remove();
                     }
@@ -50,8 +57,8 @@ public class SimpleHttpServer {
             }
             log("channel: " + message.channel);
             String response = "This is the response";
-            t.sendResponseHeaders(200, response.length());
-            OutputStream os = t.getResponseBody();
+            request.sendResponseHeaders(200, response.length());
+            OutputStream os = request.getResponseBody();
             os.write(response.getBytes());
             os.close();
         }

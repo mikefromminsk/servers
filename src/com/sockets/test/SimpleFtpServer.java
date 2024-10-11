@@ -58,7 +58,7 @@ public class SimpleFtpServer {
         BaseUser user = new BaseUser();
         user.setName("admin");
         user.setPassword("password");
-        String homeDirPath = "c:\\wamp\\www"; // Убедитесь, что путь указан правильно и существует
+        String homeDirPath = "c:\\wamp\\www\\node_modules"; // Убедитесь, что путь указан правильно и существует
 
         // Проверка возможности чтения и записи
         File homeDir = new File(homeDirPath);
