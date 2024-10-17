@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.sockets.test.Sockets.channels;
@@ -54,6 +55,10 @@ public class SimpleHttpServer {
                         iterator.remove();
                     }
                 }
+            }
+            if (Objects.equals(message.channel, "transactions")) {
+                System.out.println("transactions: received");
+                Backend.post("mfm-telegram/api/send_transactions.php", message);
             }
             log("channel: " + message.channel);
             String response = "This is the response";

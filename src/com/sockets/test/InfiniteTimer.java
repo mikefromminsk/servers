@@ -9,10 +9,7 @@ public class InfiniteTimer {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Backend.post("mfm-exchange/bot/job.php", null, response -> {
-                }, error -> {
-                    System.out.println(error);
-                });
+                Backend.post("mfm-exchange/bot/job.php");
             }
         }, 0, 1000);
         System.out.println("InfiniteTimer started");

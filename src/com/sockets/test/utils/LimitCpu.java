@@ -1,4 +1,4 @@
-package com.sockets.test;
+package com.sockets.test.utils;
 
 import java.security.MessageDigest;
 import java.util.ArrayList;

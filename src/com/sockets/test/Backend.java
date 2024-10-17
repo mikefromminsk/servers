@@ -1,6 +1,7 @@
 package com.sockets.test;
 
 import com.google.gson.Gson;
+import com.sockets.test.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,8 +10,16 @@ import java.net.URL;
 import java.util.Date;
 
 public class Backend {
-    private static final Logger log = LoggerFactory.getLogger(Backend.class);
     public static Gson json = new Gson();
+
+    public static void post(String redirectUrl) {
+        post(redirectUrl, null, null, null);
+    }
+
+    public static void post(String redirectUrl,
+                            Object data) {
+        post(redirectUrl, data, null, null);
+    }
 
     public static void post(String redirectUrl,
                             Object data,
@@ -45,10 +54,10 @@ public class Backend {
                 if (success != null)
                     success.run(Utils.convertToString(conn.getInputStream()));
             } else {
+                String response = Utils.convertToString(conn.getErrorStream());
+                System.out.println(response);
                 if (error != null)
-                    error.run(Utils.convertToString(conn.getErrorStream()));
-                else
-                    log.error(new Date() + " " + responseCode + " " + redirectUrl);
+                    error.run(response);
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
 package com.sockets.test;
 
+import com.sockets.test.utils.Base64;
+
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;

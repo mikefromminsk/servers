@@ -51,10 +51,17 @@ public class Sockets extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         Subscription subscription = json.fromJson(message, Subscription.class);
-        if (!channels.containsKey(subscription.channel)) {
-            channels.put(subscription.channel, new HashSet<>());
+        if (subscription.subscribe != null) {
+            if (!channels.containsKey(subscription.subscribe)) {
+                channels.put(subscription.subscribe, new HashSet<>());
+            }
+            channels.get(subscription.subscribe).add(conn);
         }
-        channels.get(subscription.channel).add(conn);
+        if (subscription.unsubscribe != null) {
+            if (channels.containsKey(subscription.unsubscribe)) {
+                channels.get(subscription.unsubscribe).remove(conn);
+            }
+        }
     }
 
     @Override

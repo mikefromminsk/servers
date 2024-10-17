@@ -1,4 +1,4 @@
-package com.sockets.test;
+package com.sockets.test.utils;
 
 public final class  Base64 {
 
@@ -64,10 +64,10 @@ public final class  Base64 {
     }
 
     /**
-     * Encodes hex octects into com.sockets.test.Base64
+     * Encodes hex octects into com.sockets.test.utils.Base64
      *
      * @param binaryData Array containing binaryData
-     * @return Encoded com.sockets.test.Base64 array
+     * @return Encoded com.sockets.test.utils.Base64 array
      */
     public static String encode(byte[] binaryData) {
 
@@ -155,9 +155,9 @@ public final class  Base64 {
     }
 
     /**
-     * Decodes com.sockets.test.Base64 data into octects
+     * Decodes com.sockets.test.utils.Base64 data into octects
      *
-     * @param encoded string containing com.sockets.test.Base64 data
+     * @param encoded string containing com.sockets.test.utils.Base64 data
      * @return Array containind decoded data.
      */
     public static byte[] decode(String encoded) {
@@ -249,7 +249,7 @@ public final class  Base64 {
     }
 
     /**
-     * remove WhiteSpace from MIME containing encoded com.sockets.test.Base64 data.
+     * remove WhiteSpace from MIME containing encoded com.sockets.test.utils.Base64 data.
      *
      * @param data  the byte array of base64 data (with WS)
      * @return      the new length

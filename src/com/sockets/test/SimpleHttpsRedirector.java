@@ -1,13 +1,12 @@
 package com.sockets.test;
 
+import com.sockets.test.utils.Utils;
 import com.sun.net.httpserver.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -44,7 +43,7 @@ public class SimpleHttpsRedirector {
     }
 
     public void regBot(HttpsServer server, String botName) {
-        server.createContext("/" + botName, new RedirectHandler("http://localhost/telegram/api/hook.php?bot=" + botName));
+        server.createContext("/" + botName, new RedirectHandler("http://localhost/mfm-telegram/api/hook.php?bot=" + botName));
     }
 
 
