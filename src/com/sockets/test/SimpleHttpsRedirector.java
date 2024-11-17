@@ -1,6 +1,6 @@
 package com.sockets.test;
 
-import com.sockets.test.utils.Utils;
+import com.sockets.test.utils.StringUtils;
 import com.sun.net.httpserver.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,21 +25,23 @@ public class SimpleHttpsRedirector {
     public void start() throws Exception {
         HttpsServer server = HttpsServer.create(new InetSocketAddress(port), 0);
         SSLContext sslContext = SSLContextBuilder.from(
-                "C:\\wamp\\bin\\apache\\apache2.4.51\\conf\\ssl\\telegram\\webserver.cert",
-                "C:\\wamp\\bin\\apache\\apache2.4.51\\conf\\ssl\\telegram\\webserver.key"
+                "C:\\Certbot\\archive\\telegram\\webserver.cert",
+                "C:\\Certbot\\archive\\telegram\\webserver.key"
         );
-        if (sslContext != null)
+        if (sslContext != null){
+            System.out.println("HTTPS context activated");
             server.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
                 public void configure(HttpsParameters params) {
                     params.setSSLParameters(sslContext.getDefaultSSLParameters());
                 }
             });
+        }
 
         regBot(server, "mytoken_space_bot");
         regBot(server, "mytoken_world_bot");
         server.setExecutor(null);
         server.start();
-        Sockets.log("HTTPS telegram redirector started on port: " + port);
+        System.out.println("HTTPS telegram redirector started on port: " + port);
     }
 
     public void regBot(HttpsServer server, String botName) {
@@ -60,7 +62,7 @@ public class SimpleHttpsRedirector {
         @Override
         public void handle(HttpExchange request) {
             try {
-                byte[] input = Utils.convertToBytes(request.getRequestBody());
+                byte[] input = StringUtils.convertToBytes(request.getRequestBody());
                 System.out.println(new String(input));
 
                 URL url = new URL(redirectUrl);
@@ -80,7 +82,7 @@ public class SimpleHttpsRedirector {
                 int responseCode = conn.getResponseCode();
                 System.out.println("Response Code: " + responseCode);
                 if (responseCode != 200) {
-                    System.out.println("Response Body: " + Utils.convertToString(conn.getErrorStream()));
+                    System.out.println("Response Body: " + StringUtils.convertToString(conn.getErrorStream()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -9,9 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyFactory;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -27,7 +25,7 @@ public class SSLContextBuilder {
             String webserverKeyPath
     ) {
         javax.net.ssl.SSLContext context;
-        String password = "password";
+        String password = "";
         try {
             context = javax.net.ssl.SSLContext.getInstance("TLS");
 
@@ -57,7 +55,17 @@ public class SSLContextBuilder {
     private static byte[] parseDERFromPEM(byte[] pem) {
         return Base64.decode(removeFirstAndLastLine(new String(pem)));
     }
-
+    public static KeyPair generateKeyPairs() {
+        KeyPairGenerator keyGen;
+        try {
+            keyGen = KeyPairGenerator.getInstance("RSA");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+        keyGen.initialize(4096);
+        return keyGen.generateKeyPair();
+    }
     public static String removeFirstAndLastLine(String input) {
         String[] lines = input.split("\n");
         if (lines.length <= 2) {
@@ -75,7 +83,6 @@ public class SSLContextBuilder {
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
 
         KeyFactory factory = KeyFactory.getInstance("RSA");
-
         return (RSAPrivateKey) factory.generatePrivate(spec);
     }
 

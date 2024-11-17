@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.sockets.test.Sockets.channels;
-import static com.sockets.test.Sockets.log;
 
 public class SimpleHttpServer {
 
@@ -34,7 +33,7 @@ public class SimpleHttpServer {
         server.createContext("/test", new MyHandler());
         server.setExecutor(null);
         server.start();
-        log("Http started on port: " + port);
+        System.out.println("Http started on port: " + port);
     }
 
     static class MyHandler implements HttpHandler {
@@ -50,17 +49,18 @@ public class SimpleHttpServer {
                     WebSocket conn = iterator.next();
                     if (conn.isOpen()) {
                         conn.send(requestBody);
-                        log("sent: " + requestBody);
+                        //System.out.println("sent: " + requestBody);
                     } else {
                         iterator.remove();
                     }
                 }
             }
-            if (Objects.equals(message.channel, "transactions")) {
-                System.out.println("transactions: received");
-                Backend.post("mfm-telegram/api/send_transactions.php", message);
-            }
-            log("channel: " + message.channel);
+            /*if (Objects.equals(message.channel, "transactions")) {
+                Backend.postToLocalhost("mfm-telegram/api/send_transactions.php", message, null, (response) -> {
+                    System.out.println("telegram send: " + response);
+                });
+            }*/
+            //System.out.println("channel: " + message.channel);
             String response = "This is the response";
             request.sendResponseHeaders(200, response.length());
             OutputStream os = request.getResponseBody();

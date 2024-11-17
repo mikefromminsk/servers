@@ -10,8 +10,8 @@ public class WebSocketsSecure extends Sockets {
     public WebSocketsSecure(int port) {
         super(port);
         SSLContext context = SSLContextBuilder.from(
-                "C:\\wamp\\bin\\apache\\apache2.4.51\\conf\\ssl\\webserver.cert",
-                "C:\\wamp\\bin\\apache\\apache2.4.51\\conf\\ssl\\webserver.key"
+                "C:\\Certbot\\live\\mytoken.space\\cert.pem",
+                "C:\\Certbot\\live\\mytoken.space\\privkey.pem"
         );
 
         if (context != null) {

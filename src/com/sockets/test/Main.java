@@ -1,5 +1,7 @@
 package com.sockets.test;
 
+import com.sockets.test.benchmark.TPS;
+
 import java.util.Scanner;
 
 public class Main {
@@ -10,11 +12,11 @@ public class Main {
             ftpServer.start();
             SimpleHttpServer httpServer = new SimpleHttpServer(8002);
             httpServer.start();
-            SimpleHttpsRedirector httpsServer = new SimpleHttpsRedirector(8443);
-            httpsServer.start();
             WebSocketsSecure webSocketsSecure = new WebSocketsSecure(8887);
             webSocketsSecure.start();
-            InfiniteTimer infiniteTimer = new InfiniteTimer();
+            SimpleHttpsRedirector httpsServer = new SimpleHttpsRedirector(8443);
+            httpsServer.start();
+            InfiniteTimer infiniteTimer = new InfiniteTimer("mfm-exchange/bot/job.php");
             infiniteTimer.start();
         } catch (Exception e) {
             e.printStackTrace();

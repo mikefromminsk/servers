@@ -28,9 +28,6 @@ public class Sockets extends WebSocketServer {
         super(new InetSocketAddress(port));
     }
 
-    public static void log(String message) {
-        System.out.println(message);
-    }
 
     int connections = 0;
 
@@ -38,14 +35,14 @@ public class Sockets extends WebSocketServer {
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         connections++;
         String time = new Date().toString();
-        log(connections + " connected" + time);
+        System.out.println(connections + " connected" + time);
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         connections--;
         String time = new Date().toString();
-        log(connections + " connected" + time);
+        System.out.println(connections + " connected" + time);
     }
 
     @Override
@@ -70,7 +67,7 @@ public class Sockets extends WebSocketServer {
 
     @Override
     public void onStart() {
-        log("WS started on port: " + getPort());
+        System.out.println("WS started on port: " + getPort());
         setConnectionLostTimeout(100);
     }
 
