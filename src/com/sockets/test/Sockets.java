@@ -1,19 +1,9 @@
 package com.sockets.test;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import com.sockets.test.model.Message;
 import com.sockets.test.model.Subscription;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -47,16 +37,19 @@ public class Sockets extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        Subscription subscription = json.fromJson(message, Subscription.class);
-        if (subscription.subscribe != null) {
-            if (!channels.containsKey(subscription.subscribe)) {
-                channels.put(subscription.subscribe, new HashSet<>());
+        Subscription sub = json.fromJson(message, Subscription.class);
+        if (sub.subscribe != null) {
+            if (!channels.containsKey(sub.subscribe)) {
+                channels.put(sub.subscribe, new HashSet<>());
             }
-            channels.get(subscription.subscribe).add(conn);
-        }
-        if (subscription.unsubscribe != null) {
-            if (channels.containsKey(subscription.unsubscribe)) {
-                channels.get(subscription.unsubscribe).remove(conn);
+            String[] topic = sub.subscribe.split(":");
+            if (topic[0].equals("orderbook"))
+                SpredBotJob.refreshTimer(topic[1]);
+            channels.get(sub.subscribe).add(conn);
+            System.out.println("subscribe: " + sub.subscribe);
+        } else if (sub.unsubscribe != null) {
+            if (channels.containsKey(sub.unsubscribe)) {
+                channels.get(sub.unsubscribe).remove(conn);
             }
         }
     }

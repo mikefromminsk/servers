@@ -55,11 +55,11 @@ public class SimpleHttpServer {
                     }
                 }
             }
-            /*if (Objects.equals(message.channel, "transactions")) {
-                Backend.postToLocalhost("mfm-telegram/api/send_transactions.php", message, null, (response) -> {
-                    System.out.println("telegram send: " + response);
+            if (Objects.equals(message.channel, "transactions")) {
+                Backend.postToLocalhost("mfm-telegram/send_transactions.php", message, null, (response) -> {
+                    //System.out.println("telegram send: " + response);
                 });
-            }*/
+            }
             //System.out.println("channel: " + message.channel);
             String response = "This is the response";
             request.sendResponseHeaders(200, response.length());

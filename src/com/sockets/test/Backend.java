@@ -34,7 +34,7 @@ public class Backend {
                 return;
             }
             if (!redirectUrl.contains("://")) {
-                redirectUrl = "http://localhost/" + redirectUrl;
+                redirectUrl = "http://localhost" + redirectUrl;
             }
             byte[] byteData = new byte[0];
             if (data != null)
