@@ -24,7 +24,7 @@ public class InfiniteTimer {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (System.currentTimeMillis() - lastRefresh > refreshInterval) {
+                if (System.currentTimeMillis() - lastRefresh < refreshInterval) {
                     System.out.println("call: " + path + " - " + System.currentTimeMillis());
                     Backend.postToLocalhost(path);
                 }
