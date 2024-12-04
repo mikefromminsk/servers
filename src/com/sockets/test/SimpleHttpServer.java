@@ -56,7 +56,7 @@ public class SimpleHttpServer {
                 }
             }
             if (Objects.equals(message.channel, "transactions")) {
-                Backend.postToLocalhost("mfm-telegram/send_transactions.php", message, null, (response) -> {
+                Backend.postToLocalhost("/mfm-telegram/send_transactions.php", message, null, (response) -> {
                     //System.out.println("telegram send: " + response);
                 });
             }
