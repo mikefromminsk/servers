@@ -1,122 +1,142 @@
 package com.mfm_wallet;
 
-import java.sql.SQLException;
+import com.mfm_wallet.model.Account;
+import com.mfm_wallet.model.Token;
+import com.mfm_wallet.model.Transaction;
+
 import java.util.*;
 
-import static com.sockets.test.utils.Params.map;
+class DBUtils extends BaseUtils {
+    Map<String, List<String>> userDomains = new HashMap<>();
+    Map<String, Account> allAccounts = new HashMap<>();
+    Map<String, List<String>> userTransactions = new HashMap<>();
+    Map<String, Transaction> allTransactions = new HashMap<>();
+    Map<String, Token> allTokens = new HashMap<>();
 
-public class DBUtils extends BaseUtils {
-/*
-    private static Map<String, Map<String, Map<String, String>>> mfmAccounts = new HashMap<>();
-    private static List<Map<String, String>> mfmTokenTrans = new ArrayList<>();
+    Map<String, Account> accounts = new HashMap<>();
+    List<Transaction> transactions = new ArrayList<>();
+    List<Token> tokens = new ArrayList<>();
 
-
-    public static void saveTran(Map<String, String> tran) {
-        mfmTokenTrans.add(tran);
+    void saveTran(Transaction tran) {
+        transactions.add(tran);
     }
 
-    public static void commitTrans() throws SQLException {
-        if (mfmTokenTrans != null) {
-            List<Map<String, String>> transInInsertSequence = new ArrayList<>(mfmTokenTrans);
-            Collections.reverse(transInInsertSequence);
-            for (Map<String, String> tran : transInInsertSequence) {
-                insertRow("trans", tran);
-                broadcast("transactions", tran);
-                trackAccumulate(tran.get("domain") + "_trans");
+    void saveToken(Token token) {
+        tokens.add(token);
+    }
+
+    void saveAccount(Account account) {
+        accounts.put(account.domain + account.address, account);
+        if (!userDomains.containsKey(account.address))
+            userDomains.put(account.address, new ArrayList<>());
+        if (!userDomains.get(account.address).contains(account.domain))
+            userDomains.get(account.address).add(account.domain);
+    }
+
+    Account getAccount(String domain, String address) {
+        if (accounts.containsKey(domain + address))
+            return accounts.get(domain + address);
+        return allAccounts.get(domain + address);
+    }
+
+    List<Account> getAccounts(String address) {
+        List<Account> result = new ArrayList<>();
+        if (userDomains.containsKey(address)) {
+            for (String domain : userDomains.get(address)) {
+                Account account = getAccount(domain, address);
+                if (account != null) result.add(account);
             }
-            trackAccumulate("trans_count", transInInsertSequence.size());
-            mfmTokenTrans = null;
         }
+        return result;
     }
 
-
-    public static void setAccount(String domain, String address, Map<String, String> params) throws SQLException {
-        Map<String, String> account = getAccount(domain, address);
-        if (account == null) {
-            account = new HashMap<>(params);
-            account.put("commit", "insert");
-            account.put("domain", domain);
-            account.put("address", address);
-        } else {
-            if (account.get("commit") == null) {
-                account.put("commit", "update");
+    void commitTrans() {
+        if (transactions != null) {
+            Collections.reverse(transactions);
+            for (Transaction tran : transactions) {
+                allTransactions.put(tran.nextHash, tran);
+                if (!userTransactions.containsKey(tran.from))
+                    userTransactions.put(tran.from, new ArrayList<>());
+                userTransactions.get(tran.from).add(tran.nextHash);
+                broadcast("transactions", gson.toJson(tran));
+                trackAccumulate(tran.domain + "_trans");
             }
-            account.putAll(params);
-        }
-        mfmAccounts.computeIfAbsent(domain, k -> new HashMap<>()).put(address, account);
-    }
-
-    public static Map<String, String> getAccount(String domain, String address) throws SQLException {
-        mfmAccounts.computeIfAbsent(domain, k -> new HashMap<>());
-        Map<String, String> account = mfmAccounts.get(domain).get(address);
-        if (account == null) {
-            account = selectRowWhere("accounts", map("domain", domain, "address", address));
-        }
-        mfmAccounts.get(domain).put(address, account);
-        return account;
-    }
-
-    static List<Map<String, String>> getAccounts(String address, int limit, int page) throws SQLException {
-        return select("SELECT * FROM accounts t1 LEFT JOIN tokens t2 ON t1.domain = t2.domain WHERE address = '" + address + "' LIMIT " + page * limit + ", " + limit);
-    }
-
-
-    public static void commitAccounts() throws SQLException {
-        if (mfmAccounts != null) {
-            int totalInsertCount = 0;
-            for (String domain : mfmAccounts.keySet()) {
-                int domainInsertCount = 0;
-                for (String address : mfmAccounts.get(domain).keySet()) {
-                    Map<String, String> account = mfmAccounts.get(domain).get(address);
-                    String commit = (String) account.get("commit");
-                    account.remove("commit");
-                    if ("insert".equals(commit)) {
-                        insertRow("accounts", account);
-                        domainInsertCount++;
-                        totalInsertCount++;
-                    } else if ("update".equals(commit)) {
-                        updateWhere("accounts", account, map("domain", domain, "address", address));
-                    }
-                }
-                trackAccumulate(domain + "_accounts", domainInsertCount);
-            }
-            trackAccumulate("accounts_count", totalInsertCount);
-            mfmAccounts = null;
+            trackAccumulate("trans_count", transactions.size());
+            transactions.clear();
         }
     }
 
-    static void commitTokens() throws SQLException {
+    void commitAccounts() {
+        int newAccountsCount = 0;
+        for (Account account : accounts.values()) {
+            if (!allAccounts.containsKey(account.domain + account.address))
+                newAccountsCount++;
+            allAccounts.put(account.domain + account.address, account);
+            trackAccumulate(account.domain + "_accounts");
+        }
+        trackAccumulate("accounts_count", newAccountsCount);
+        accounts.clear();
+    }
+
+    void commitTokens() {
+        int newTokensCount = 0;
+        for (Token token : tokens) {
+            if (!allTokens.containsKey(token.domain))
+                newTokensCount++;
+            allTokens.put(token.domain, token);
+        }
+        trackAccumulate("token_count", newTokensCount);
+        tokens.clear();
+    }
+
+    void commitTokenUtils() {
         commitAccounts();
         commitTrans();
+        commitTokens();
+    }
+
+    List<Transaction> tokenTrans(String domain, String fromAddress, String toAddress) {
+        List<Transaction> result = new ArrayList<>();
+        if (userTransactions.containsKey(fromAddress)) {
+            for (String nextHash : userTransactions.get(fromAddress)) {
+                Transaction tran = allTransactions.get(nextHash);
+                if (tran != null && tran.domain.equals(domain)) {
+                    if (toAddress == null || toAddress.equals(tran.to))
+                        result.add(tran);
+                }
+            }
+        }
+        result.sort(Comparator.comparingLong(o -> o.time));
+        return result;
     }
 
 
-    public static List<Map<String, String>> tokenTrans(String domain, String fromAddress, String toAddress, int page, int size) throws SQLException {
-        String sql = "SELECT * FROM trans t1 LEFT JOIN tokens t2 ON t1.domain = t2.domain WHERE 1=1";
-        if (fromAddress != null) sql += " AND (`from` = '" + fromAddress + "' OR `to` = '" + fromAddress + "')";
-        if (toAddress != null) sql += " AND (`from` = '" + toAddress + "' OR `to` = '" + toAddress + "')";
-        if (domain != null) sql += " AND t1.domain = '" + domain + "'";
-        sql += " ORDER BY t1.time DESC LIMIT " + page * size + ", " + size;
-        return select(sql);
-    }
-
-
-    public static Map<String, String> tokenSecondTran(String domain) throws SQLException {
+/*    Map<String, String> tokenSecondTran(String domain) {
         return selectRow("SELECT * FROM trans WHERE domain = '" + domain + "' AND `from` = '" + GENESIS_ADDRESS + "' ORDER BY time LIMIT 1, 1");
     }
 
-    public static Map<String, String> tokenTran(String nextHash) throws SQLException {
+    Map<String, String> tokenTran(String nextHash) {
         return selectRow("SELECT * FROM trans WHERE next_hash = '" + nextHash + "'");
     }
 
 
-    public static Map<String, String> tokenLastTran(String domain, String fromAddress, String toAddress) throws SQLException {
-        List<Map<String, String>> trans = tokenTrans(domain, fromAddress, toAddress, 0, 1);
+    Map<String, String> tokenLastTran(String domain, String fromAddress, String toAddress) {
+        List<Transaction> trans = tokenTrans(domain, fromAddress, toAddress, 0, 1);
         return trans.isEmpty() ? null : trans.get(0);
+    }*/
+
+    Double tokenBalance(String domain, String address) {
+        Account account = getAccount(domain, address);
+        return account != null ? account.balance : null;
     }
 
-    public static Double tokenBalance(String domain, String address) throws SQLException {
-        Map<String, String> account = getAccount(domain, address);
-        return account != null ? (Double) account.get("balance") : null;
-    }*/
+    static void trackAccumulate(String key) {
+        // Implement tracking logic here
+    }
+
+    static void trackAccumulate(String key, int value) {
+        // Implement tracking logic here
+    }
+
+
 }

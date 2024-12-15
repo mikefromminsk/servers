@@ -9,7 +9,7 @@ import java.util.Map;
 
 import static com.sockets.test.utils.Params.map;
 
-public class Server extends Token {
+public class Server extends TokenRequests {
     static String MIME_JSON = "application/json";
 
     public Server(int port) throws IOException {
@@ -17,8 +17,9 @@ public class Server extends Token {
             @Override
             public Response serve(IHTTPSession session) {
                 try {
-                    switch (session.getUri()) {
-                        case "/mfm-token/send": {
+                    String scriptPath = session.getUri().substring(1);
+                    switch (scriptPath) {
+                        case "mfm-token/send": {
                             Map<String, String> params = parseParams(session);
                             Map<String, String> response = map();
 
@@ -29,7 +30,7 @@ public class Server extends Token {
                             String pass = getRequired(params, "pass");
                             String delegate = getString(params, "delegate");
 
-                            response.put("next_hash", "" + tokenSend(domain, from_address, to_address, amount, pass, delegate));
+                            response.put("next_hash", "" + tokenSend(scriptPath, domain, from_address, to_address, amount, pass, delegate));
 
                             return commit(response);
                         }

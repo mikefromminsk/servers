@@ -1,18 +1,31 @@
 package com.mfm_wallet;
 
-import com.sockets.test.Backend;
+import com.mfm_wallet.model.Account;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.UUID;
 
-import static com.sockets.test.utils.Params.map;
+public class TokenRequests extends TokenUtils {
 
-public class Token extends TokenUtils {
+    static String tokenKey(String domain, String address, String password, String prevKey) throws NoSuchAlgorithmException {
+        return md5(domain + address + password + prevKey);
+    }
+
+    static String tokenNextHash(String domain, String address, String password, String prevKey) throws NoSuchAlgorithmException {
+        return md5(tokenKey(domain, address, password, prevKey));
+    }
+
+    static String tokenPass(String domain, String address, String password) throws NoSuchAlgorithmException, SQLException {
+        /*Account account = DBUtils.getAccount(domain, address);
+        String key = tokenKey(domain, address, password, account.prevKey);
+        String nextHash = tokenNextHash(domain, address, password, key);
+        return key + ":" + nextHash;*/
+        return null;
+    }
+
 /*
     static boolean tokenSendAndCommit(String domain, String from, String to, double amount, String password) throws NoSuchAlgorithmException, SQLException {
-        Map<String, String> account = getAccount(domain, from);
+        Account account = getAccount(domain, from);
         if (account != null) {
             String key = tokenKey(domain, from, password, (String) account.get("prev_key"));
             String nextHash = tokenNextHash(domain, from, password, key);

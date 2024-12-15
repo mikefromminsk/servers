@@ -2,6 +2,7 @@ package com.mfm_wallet;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sockets.test.utils.MD5;
 import fi.iki.elonen.NanoHTTPD;
 
 import java.io.InputStreamReader;
@@ -16,14 +17,8 @@ public class BaseUtils {
 
     static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    static String md5(String input) throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] messageDigest = md.digest(input.getBytes());
-        StringBuilder sb = new StringBuilder();
-        for (byte b : messageDigest) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
+    static String md5(String input) {
+        return MD5.hash(input);
     }
 
     static Map<String, String> error(String message) {
@@ -61,5 +56,9 @@ public class BaseUtils {
     static NanoHTTPD.Response commit(Map<String, String> response) {
         response.put("success", "true");
         return newFixedLengthResponse(gson.toJson(response));
+    }
+
+    static void broadcast(String channel, String message) {
+        // Implement broadcast logic here
     }
 }

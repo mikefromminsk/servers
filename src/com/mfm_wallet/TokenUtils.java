@@ -1,133 +1,98 @@
 package com.mfm_wallet;
 
-import java.security.NoSuchAlgorithmException;
-import java.sql.*;
-import java.util.*;
+import com.mfm_wallet.model.Account;
+import com.mfm_wallet.model.Token;
+import com.mfm_wallet.model.Transaction;
 
-import static com.sockets.test.utils.Params.map;
-
-class TokenUtils extends DBUtils {
-    /*static final String GAS_DOMAIN = "usdt";
+class TokenUtils extends AnalyticsUtils {
+    static final String GAS_DOMAIN = "usdt";
     static final String GENESIS_ADDRESS = "owner";
 
-    static String tokenKey(String domain, String address, String password, String prevKey) throws NoSuchAlgorithmException {
-        return md5(domain + address + password + prevKey);
-    }
 
-    static String tokenNextHash(String domain, String address, String password, String prevKey) throws NoSuchAlgorithmException {
-        return md5(tokenKey(domain, address, password, prevKey));
-    }
-
-    static String tokenPass(String domain, String address, String password) throws NoSuchAlgorithmException, SQLException {
-        Map<String, String> account = DBUtils.getAccount(domain, address);
-        String key = tokenKey(domain, address, password, account.get("prev_key"));
-        String nextHash = tokenNextHash(domain, address, password, key);
-        return key + ":" + nextHash;
-    }
-*/
-    static String tokenSend(String domain,
-                                   String fromAddress,
-                                   String toAddress,
-                                   double amount,
-                                   String pass,
-                                   String delegate) {
+    String tokenSend(String scriptPath,
+                     String domain,
+                     String fromAddress,
+                     String toAddress,
+                     Double amount,
+                     String pass,
+                     String delegate) {
 
         if (fromAddress.equals(toAddress) && amount != 0) error("from_address and to_address are the same");
         String key = pass != null ? pass.split(":")[0] : null;
         String nextHash = pass != null ? pass.split(":")[1] : null;
         if (amount != Math.round(amount * 100) / 100.0) error("amount tick is 0.01");
         if (amount < 0) error("amount less than 0");
-        /*if (fromAddress.equals(GENESIS_ADDRESS)) {
+        if (fromAddress.equals(GENESIS_ADDRESS)) {
             if (domain.length() < 3 || domain.length() > 16) error("domain length has to be between 3 and 16");
             if (tokenBalance(domain, GENESIS_ADDRESS) == null) {
-                setAccount(domain, GENESIS_ADDRESS, map(
-                        "prev_key", "",
-                        "next_hash", "",
-                        "balance", amount,
-                        "delegate", "mfm-token/send.php"
-                ));
-                if (scalarWhere("tokens", "owner", map("domain", domain)) == null && amount > 0) {
-                    insertRow("tokens", map(
-                            "domain", domain,
-                            "owner", toAddress,
-                            "supply", amount,
-                            "created", System.currentTimeMillis()
-                    ));
+                Account owner = new Account();
+                owner.domain = domain;
+                owner.address = GENESIS_ADDRESS;
+                owner.prevKey = "";
+                owner.nextHash = "";
+                owner.balance = amount;
+                owner.delegate = "mfm-token/send.php";
+                saveAccount(owner);
+                if (amount > 0) {
+                    saveToken(new Token(domain, toAddress, amount, System.currentTimeMillis()));
                     trackAccumulate("tokens_count");
                 }
             }
-            Map<String, String> gasAccount = getAccount(GAS_DOMAIN, toAddress);
-            if (!domain.equals(GAS_DOMAIN) && gasAccount.get("delegate") != null) {
-                delegate = (String) gasAccount.get("delegate");
+            Account gasAccount = getAccount(GAS_DOMAIN, toAddress);
+            if (!domain.equals(GAS_DOMAIN) && gasAccount.delegate != null) {
+                delegate = gasAccount.delegate;
             }
             if (tokenBalance(domain, toAddress) == null) {
-                setAccount(domain, toAddress, map(
-                        "prev_key", "",
-                        "next_hash", nextHash,
-                        "balance", 0,
-                        "delegate", delegate
-                ));
+                Account to = new Account();
+                to.domain = domain;
+                to.address = GENESIS_ADDRESS;
+                to.prevKey = "";
+                to.nextHash = nextHash;
+                to.balance = 0.0;
+                to.delegate = delegate;
+                saveAccount(to);
             }
         }
 
-        Map<String, String> from = getAccount(domain, fromAddress);
-        Map<String, String> to = getAccount(domain, toAddress);
-        from.put("balance", Math.round((Double) from.get("balance") * 100) / 100.0);
-        if ((Double) from.get("balance") < amount) error(domain.toUpperCase() + " balance is not enough in " + fromAddress + " wallet. Balance: " + from.get("balance") + " Need: " + amount);
+        Account from = getAccount(domain, fromAddress);
+        Account to = getAccount(domain, toAddress);
+        if (from.balance < amount)
+            error(domain.toUpperCase() + " balance is not enough in " + fromAddress + " wallet. Balance: " + from.balance + " Need: " + amount);
         if (to == null) error(toAddress + " receiver doesn't exist");
-        if (from.get("delegate") != null) {
-            if (!from.get("delegate").equals(getScriptPath())) error("script " + getScriptPath() + " cannot use " + fromAddress + " address. Only " + from.get("delegate"));
+        if (from.delegate != null) {
+            if (!from.delegate.equals(scriptPath))
+                error("script " + scriptPath + " cannot use " + fromAddress + " address. Only " + from.delegate);
         } else {
-            if (!from.get("next_hash").equals(md5(key))) error(domain + " key is not right");
+            if (!from.nextHash.equals(md5(key))) error(domain + " key is not right");
         }
 
-        if (from.get("delegate") != null) {
-            setAccount(domain, fromAddress, of(
-                    "balance", Math.round(((Double) from.get("balance") - amount) * 100) / 100.0
-            ));
+        if (from.delegate != null) {
+            from.balance = Math.round((from.balance - amount) * 100) / 100.0;
+            saveAccount(from);
         } else {
-            setAccount(domain, fromAddress, map(
-                    "balance", Math.round(((Double) from.get("balance") - amount) * 100) / 100.0,
-                    "prev_key", key,
-                    "next_hash", nextHash
-            ));
+            from.prevKey = key;
+            from.nextHash = nextHash;
+            from.balance = Math.round((from.balance - amount) * 100) / 100.0;
+            saveAccount(from);
         }
 
         double fee = 0;
 
-        setAccount(domain, toAddress, map(
-                "balance", Math.round(((Double) to.get("balance") + amount - fee) * 100) / 100.0
-        ));
+        to.balance = Math.round((from.balance - fee) * 100) / 100.0;
+        saveAccount(to);
 
-        saveTran(map(
-                "domain", domain,
-                "from", fromAddress,
-                "to", toAddress,
-                "amount", amount,
-                "fee", fee,
-                "key", key,
-                "next_hash", nextHash,
-                "delegate", delegate,
-                "time", System.currentTimeMillis()
-        ));*/
+        saveTran(new Transaction(domain,
+                fromAddress,
+                toAddress,
+                amount,
+                fee,
+                key,
+                nextHash,
+                delegate,
+                System.currentTimeMillis()
+        ));
 
         return nextHash;
     }
 
-    /*static void broadcast(String channel, Map<String, String> message) {
-        // Implement broadcast logic here
-    }
-
-    static void trackAccumulate(String key) {
-        // Implement tracking logic here
-    }
-
-    static void trackAccumulate(String key, int value) {
-        // Implement tracking logic here
-    }
-
-    static String getScriptPath() {
-        // Implement getScriptPath logic here
-        return "";
-    }*/
 }

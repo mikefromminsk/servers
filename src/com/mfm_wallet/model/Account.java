@@ -1,10 +1,10 @@
 package com.mfm_wallet.model;
 
 public class Account {
-    String domain;
-    String address;
-    String prevKey;
-    String nextHash;
-    Double balance;
-    String delegate;
+    public String domain;
+    public String address;
+    public String prevKey;
+    public String nextHash;
+    public Double balance;
+    public String delegate;
 }
