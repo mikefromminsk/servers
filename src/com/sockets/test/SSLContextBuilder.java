@@ -20,10 +20,11 @@ import java.security.spec.PKCS8EncodedKeySpec;
 
 public class SSLContextBuilder {
 
-    public static SSLContext from(
-            String webserverCertPath,
-            String webserverKeyPath
-    ) {
+
+    public static SSLContext from(String domain) {
+        String webserverCertPath = "C:\\Certbot\\live\\" + domain + "\\cert.pem";
+        String webserverKeyPath = "C:\\Certbot\\live\\" + domain + "\\privkey.pem";
+
         javax.net.ssl.SSLContext context;
         String password = "";
         try {
@@ -49,12 +50,14 @@ public class SSLContextBuilder {
         } catch (Exception e) {
             context = null;
         }
+        System.out.println("cert " + domain + " activated");
         return context;
     }
 
     private static byte[] parseDERFromPEM(byte[] pem) {
         return Base64.decode(removeFirstAndLastLine(new String(pem)));
     }
+
     public static KeyPair generateKeyPairs() {
         KeyPairGenerator keyGen;
         try {
@@ -66,6 +69,7 @@ public class SSLContextBuilder {
         keyGen.initialize(4096);
         return keyGen.generateKeyPair();
     }
+
     public static String removeFirstAndLastLine(String input) {
         String[] lines = input.split("\n");
         if (lines.length <= 2) {

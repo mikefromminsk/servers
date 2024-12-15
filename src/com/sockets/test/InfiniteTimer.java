@@ -8,23 +8,28 @@ public class InfiniteTimer {
     Timer timer;
     String path;
     int interval;
-    int refreshInterval;
-    long lastRefresh = 0;
+    int skipCallsAfterMs;
+    long lastRestart = 0;
 
-    public InfiniteTimer(String path, int intervalMs, int refreshInterval) {
+    public InfiniteTimer(String path, int intervalMs) {
+        this(path, intervalMs, -1000);
+    }
+
+    public InfiniteTimer(String path, int intervalMs, int skipCallsAfterMs) {
         this.path = path;
         this.interval = intervalMs;
-        this.refreshInterval = refreshInterval;
+        this.skipCallsAfterMs = skipCallsAfterMs;
         System.out.println("Timer: " + path);
     }
 
     public InfiniteTimer start() {
         stop();
+        restart();
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (System.currentTimeMillis() - lastRefresh < refreshInterval) {
+                if (System.currentTimeMillis() - lastRestart < skipCallsAfterMs) {
                     System.out.println("call: " + path + " - " + System.currentTimeMillis());
                     Backend.postToLocalhost(path);
                 }
@@ -33,8 +38,8 @@ public class InfiniteTimer {
         return this;
     }
 
-    public void refresh() {
-        this.lastRefresh = System.currentTimeMillis();
+    public void restart() {
+        this.lastRestart = System.currentTimeMillis();
     }
 
     public void stop() {

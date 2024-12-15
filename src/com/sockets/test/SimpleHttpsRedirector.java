@@ -15,7 +15,6 @@ import java.net.URL;
 
 public class SimpleHttpsRedirector {
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleHttpsRedirector.class);
     private int port;
 
     public SimpleHttpsRedirector(int port) {
@@ -24,10 +23,7 @@ public class SimpleHttpsRedirector {
 
     public void start() throws Exception {
         HttpsServer server = HttpsServer.create(new InetSocketAddress(port), 0);
-        SSLContext sslContext = SSLContextBuilder.from(
-                "C:\\Certbot\\archive\\telegram\\webserver.cert",
-                "C:\\Certbot\\archive\\telegram\\webserver.key"
-        );
+        SSLContext sslContext = SSLContextBuilder.from("telegram");
         if (sslContext != null){
             System.out.println("HTTPS context activated");
             server.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
@@ -38,7 +34,6 @@ public class SimpleHttpsRedirector {
         }
 
         regBot(server, "mytoken_space_bot");
-        regBot(server, "mytoken_world_bot");
         server.setExecutor(null);
         server.start();
         System.out.println("HTTPS telegram redirector started on port: " + port);

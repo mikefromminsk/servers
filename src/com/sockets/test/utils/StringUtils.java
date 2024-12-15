@@ -4,6 +4,8 @@ package com.sockets.test.utils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StringUtils {
     public static byte[] convertToBytes(InputStream inputStream) throws IOException {
