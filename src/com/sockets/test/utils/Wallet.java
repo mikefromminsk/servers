@@ -29,7 +29,7 @@ public class Wallet {
                             Success success,
                             Success error) {
         calcKeyHash(fromAddress, password, domain, prev_key, pass -> {
-            Backend.postToLocalhost("/mfm-token/send.php", new HashMap<String, String>() {{
+            Backend.postToLocalhost("/mfm-token/send", new HashMap<String, String>() {{
                 put("domain", domain);
                 put("from_address", fromAddress);
                 put("to_address", toAddress);
@@ -45,7 +45,7 @@ public class Wallet {
                             Success success,
                             Success error) {
         calcStartHash(address, password, domain, pass -> {
-            Backend.postToLocalhost("/mfm-token/send.php", new HashMap<String, String>() {{
+            Backend.postToLocalhost("/mfm-token/send", new HashMap<String, String>() {{
                 put("domain", domain);
                 put("from_address", "owner");
                 put("to_address", address);

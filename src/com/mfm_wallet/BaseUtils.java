@@ -5,13 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.sockets.test.utils.MD5;
 import fi.iki.elonen.NanoHTTPD;
 
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-
-import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class BaseUtils {
 
@@ -21,18 +20,25 @@ public class BaseUtils {
         return MD5.hash(input);
     }
 
-    static Map<String, String> error(String message) {
-        throw new RuntimeException(message);
+    static Map<String, String> error(Object message) {
+        if (message instanceof String) {
+            throw new RuntimeException((String) message);
+        } else {
+            throw new RuntimeException(gson.toJson(message));
+        }
     }
 
     static Map<String, String> parseParams(NanoHTTPD.IHTTPSession session) {
         Map<String, String> params = new HashMap<>();
         params.putAll(session.getHeaders());
-        params.putAll(session.getParms());
-        if (session.getMethod().equals("POST")) {
-            gson.fromJson(new InputStreamReader(session.getInputStream()), Map.class)
-                    .forEach((k, v) -> params.put((String) k, (String) v));
+        if (session.getMethod() == NanoHTTPD.Method.POST) {
+            try {
+                session.parseBody(params);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        params.putAll(session.getParms());
         return params;
     }
 
@@ -51,11 +57,6 @@ public class BaseUtils {
     static Double getDoubleRequired(Map<String, String> params, String key) {
         String value = getRequired(params, key);
         return Double.parseDouble(value);
-    }
-
-    static NanoHTTPD.Response commit(Map<String, String> response) {
-        response.put("success", "true");
-        return newFixedLengthResponse(gson.toJson(response));
     }
 
     static void broadcast(String channel, String message) {

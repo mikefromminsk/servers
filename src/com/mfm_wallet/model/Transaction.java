@@ -1,7 +1,5 @@
 package com.mfm_wallet.model;
 
-import java.util.Date;
-
 public class Transaction {
     public String domain;
     public String from;
@@ -9,7 +7,7 @@ public class Transaction {
     public Double amount;
     public Double fee;
     public String key;
-    public String nextHash;
+    public String next_hash;
     public String delegate;
     public Long time;
 
@@ -19,7 +17,7 @@ public class Transaction {
                        Double amount,
                        Double fee,
                        String key,
-                       String nextHash,
+                       String next_hash,
                        String delegate,
                        Long time) {
         this.domain = domain;
@@ -28,7 +26,7 @@ public class Transaction {
         this.amount = amount;
         this.fee = fee;
         this.key = key;
-        this.nextHash = nextHash;
+        this.next_hash = next_hash;
         this.delegate = delegate;
         this.time = time;
     }
