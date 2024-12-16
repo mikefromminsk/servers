@@ -62,7 +62,7 @@ public class Wallet {
                             String amount,
                             Success success,
                             Success error) {
-        Backend.postToLocalhost("/mfm-token/account.php", new HashMap<String, String>() {{
+        Backend.postToLocalhost(":8003/mfm-token/account.php", new HashMap<String, String>() {{
             put("domain", domain);
             put("address", fromAddress);
         }}, response -> {

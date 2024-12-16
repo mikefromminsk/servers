@@ -10,6 +10,7 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/Java-WebSocket-1.5.7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/slf4j-simple-2.0.7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/mina-core-2.1.8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/nanohttpd-2.3.0.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

@@ -7,6 +7,7 @@ public class Account {
     public String next_hash;
     public Double balance;
     public String delegate;
+    public Token token;
 
     public Account clone() {
         Account account = new Account();

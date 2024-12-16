@@ -20,7 +20,7 @@ public class BaseUtils {
         return MD5.hash(input);
     }
 
-    static Map<String, String> error(Object message) {
+    public static Map<String, String> error(Object message) {
         if (message instanceof String) {
             throw new RuntimeException((String) message);
         } else {
@@ -39,14 +39,15 @@ public class BaseUtils {
             }
         }
         params.putAll(session.getParms());
+        params.put("script_path", session.getUri().substring(1));
         return params;
     }
 
-    static String getString(Map<String, String> params, String key) {
+    public static String getString(Map<String, String> params, String key) {
         return params.get(key);
     }
 
-    static String getRequired(Map<String, String> params, String key) {
+    public static String getRequired(Map<String, String> params, String key) {
         String value = getString(params, key);
         if (value == null) {
             error(key + " is empty");
@@ -54,12 +55,30 @@ public class BaseUtils {
         return value;
     }
 
-    static Double getDoubleRequired(Map<String, String> params, String key) {
+    public static Double getDouble(Map<String, String> params, String key) {
+        return getDouble(params, key, null);
+    }
+
+    public static Double getDouble(Map<String, String> params, String key, Double defaultValue) {
+        String value = getString(params, key);
+        return value == null ? defaultValue : Double.parseDouble(value);
+    }
+
+    public static Long getLong(Map<String, String> params, String key, Long defaultValue) {
+        String value = getString(params, key);
+        return value == null ? defaultValue : Long.parseLong(value);
+    }
+
+    public static Double getDoubleRequired(Map<String, String> params, String key) {
         String value = getRequired(params, key);
         return Double.parseDouble(value);
     }
 
     static void broadcast(String channel, String message) {
         // Implement broadcast logic here
+    }
+
+    public static Long time() {
+        return (long) System.currentTimeMillis() / 1000;
     }
 }
