@@ -7,7 +7,7 @@ public class Spred extends ExchangeUtils{
         String domain = getRequired("domain");
 
     }
-
+/*
     public void placeRange(String domain, double minPrice, double maxPrice, int count, double amountUsdt, int isSell, String address, String pass) {
         if (minPrice <= 0) throw new RuntimeException("min_price less than 0");
         if (maxPrice <= 0) throw new RuntimeException("max_price less than 0");
@@ -43,7 +43,7 @@ public class Spred extends ExchangeUtils{
                 price += priceStep;
             }
         }
-    }
+    }*/
 
 
 }

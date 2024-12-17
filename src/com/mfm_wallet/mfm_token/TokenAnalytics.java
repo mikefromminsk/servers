@@ -10,7 +10,7 @@ public class TokenAnalytics extends Token {
         String domain = getRequired("domain");
         response.put("owner", getAccount(domain, "owner"));
 
-        Map<String, Float> analytics = new LinkedHashMap<>();
+        Map<String, Double> analytics = new LinkedHashMap<>();
         analytics.put("trans", getCandleLastValue(domain + "_trans"));
         analytics.put("accounts", getCandleLastValue(domain + "_accounts"));
         analytics.put("trans_count", getCandleLastValue("trans_count"));

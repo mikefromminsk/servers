@@ -9,9 +9,8 @@ import static com.mfm_wallet.mfm_data.DataContract.GAS_DOMAIN;
 
 abstract class ExchangeUtils extends Contract {
 
-    private static Map<Integer, Order> allOrders = new HashMap<>();
-
-    private Map<Integer, Order> orders = new HashMap<>();
+    private static final Map<Integer, Order> allOrders = new HashMap<>();
+    private final Map<Integer, Order> orders = new HashMap<>();
 
     public void place(String domain, String address, long isSell, double price, double amount, double total, String pass) {
         String exchangeAddress = "exchange_" + domain;
@@ -32,9 +31,18 @@ abstract class ExchangeUtils extends Contract {
     }
 
     public int createOrder(String address, String domain, int isSell, double price, double amount, double total) {
-        int nextOrderId = random.nextInt();
-        orders.put(nextOrderId, new Order(address, domain, isSell, price, amount, total, 2, time()));
-        return nextOrderId;
+        Order order = new Order();
+        order.orderId = random.nextInt();
+        order.address = address;
+        order.domain = domain;
+        order.isSell = isSell;
+        order.price = price;
+        order.amount = amount;
+        order.total = total;
+        order.status = 2;
+        order.timestamp = time();
+        orders.put(order.orderId, order);
+        return order.orderId;
     }
 
     private List<Order> getOrders(String domain, int isSell, double price, boolean isBuy) {
@@ -205,7 +213,7 @@ abstract class ExchangeUtils extends Contract {
     }
 
     public boolean botScriptReg(String domain, String botAddress) {
-        String placeScript = "mfm-exchange/owner.php";
+        String placeScript = "mfm-exchange/place.php";
         tokenRegScript(domain, botAddress, placeScript);
         return tokenRegScript(GAS_DOMAIN, botAddress, placeScript);
     }
@@ -219,7 +227,7 @@ abstract class ExchangeUtils extends Contract {
     private void updateOrder(int orderId, double amountFilled, double totalFilled, int status) {
         Order order = orders.get(orderId);
         if (order == null) {
-            order = allOrders.get(orderId);
+            order = allOrders.get(orderId).clone();
         }
         if (order != null) {
             order.amountFilled = amountFilled;
@@ -253,15 +261,23 @@ abstract class ExchangeUtils extends Contract {
         public double amountFilled;
         public double totalFilled;
 
-        public Order(String address, String domain, int isSell, double price, double amount, double total, int status, long timestamp) {
-            this.address = address;
-            this.domain = domain;
-            this.isSell = isSell;
-            this.price = price;
-            this.amount = amount;
-            this.total = total;
-            this.status = status;
-            this.timestamp = timestamp;
+        public Order() {
+        }
+
+        public Order clone() {
+            Order order = new Order();
+            order.orderId = orderId;
+            order.address = address;
+            order.domain = domain;
+            order.isSell = isSell;
+            order.price = price;
+            order.amount = amount;
+            order.total = total;
+            order.status = status;
+            order.timestamp = timestamp;
+            order.amountFilled = amountFilled;
+            order.totalFilled = totalFilled;
+            return order;
         }
     }
 
