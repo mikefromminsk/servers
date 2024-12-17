@@ -1,8 +1,5 @@
 package com.mfm_wallet;
 
-import com.mfm_wallet.mfm_token.Send;
-import com.mfm_wallet.model.Account;
-import com.mfm_wallet.model.Token;
 import com.sockets.test.SSLContextBuilder;
 import fi.iki.elonen.NanoHTTPD;
 
@@ -12,7 +9,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
-import static com.mfm_wallet.BaseUtils.*;
+import static com.mfm_wallet.Utils.*;
 import static fi.iki.elonen.NanoHTTPD.Response.Status.INTERNAL_ERROR;
 import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 
@@ -47,6 +44,8 @@ public class Server extends NanoHTTPD {
                 return new com.mfm_wallet.mfm_analytics.Funnel();
             case "mfm-mining/mint.php":
                 return new com.mfm_wallet.mfm_mining.Mint();
+            case "mfm-mining/miner.php":
+                return new com.mfm_wallet.mfm_mining.Miner();
             default:
                 error("Unknown path: " + scriptPath);
         }
@@ -58,10 +57,11 @@ public class Server extends NanoHTTPD {
         Long start = time();
         String scriptPath = session.getUri().substring(1);
         Contract contract = getContract(scriptPath);
-        contract.params = parseParams(session);
-        contract.scriptPath = scriptPath;
         try {
+            contract.params = parseParams(session);
+            contract.scriptPath = scriptPath;
             contract.run();
+            contract.commit();
         } catch (Exception e) {
             Map<String, Object> error = new LinkedHashMap<>();
             if (e.getMessage().charAt(0) == '{') {
@@ -83,12 +83,6 @@ public class Server extends NanoHTTPD {
             System.out.println("error: " + scriptPath);
             return newFixedLengthResponse(INTERNAL_ERROR, MIME_JSON, gson.toJson(error));
         }
-        contract.commitData();
-        contract.commitAnalytics();
-        contract.commitObjects();
-        contract.commitTrans();
-        contract.commitAccounts();
-        contract.commitTokens();
         contract.response.put("success", "true");
         System.out.println("success: " + scriptPath + " took " + (time() - start) + "ms");
         Response response = newFixedLengthResponse(OK, MIME_JSON, gson.toJson(contract.response));

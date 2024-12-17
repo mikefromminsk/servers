@@ -1,6 +1,6 @@
 package com.mfm_wallet.mfm_analytics;
 
-import com.mfm_wallet.BaseUtils;
+import com.mfm_wallet.Utils;
 import com.mfm_wallet.model.Candle;
 import com.mfm_wallet.model.Event;
 import com.mfm_wallet.model.Field;
@@ -8,7 +8,7 @@ import com.mfm_wallet.model.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AnalyticsUtils extends BaseUtils {
+public class AnalyticsUtils extends Utils {
     static Random random = new Random();
     static final Map<String, Long> defaultChartSettings = new HashMap<>();
     static final Map<String, List<Candle>> allCharts = new ConcurrentHashMap<>();
@@ -244,13 +244,9 @@ public class AnalyticsUtils extends BaseUtils {
         }
     }
 
-    public void commitAnalytics() {
+    public void commit() {
         commitEvents();
         commitObjects();
         commitCharts();
-    }
-
-    String getScriptPath() {
-        return "script_path";
     }
 }

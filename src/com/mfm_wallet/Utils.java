@@ -5,14 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.sockets.test.utils.MD5;
 import fi.iki.elonen.NanoHTTPD;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 
-public class BaseUtils {
+public class Utils {
 
     public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -51,6 +47,6 @@ public class BaseUtils {
     }
 
     public static Long time() {
-        return (long) System.currentTimeMillis() / 1000;
+        return System.currentTimeMillis() / 1000;
     }
 }

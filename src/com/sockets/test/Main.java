@@ -1,6 +1,5 @@
 package com.sockets.test;
 
-import com.mfm_wallet.BaseUtils;
 import com.mfm_wallet.Server;
 
 import java.util.Scanner;
@@ -21,8 +20,7 @@ public class Main {
 
             new Server(8003);
             Backend.postToLocalhost("/mfm-wallet/api/init.php", map(
-                    "wallet_admin_address", "admin",
-                    "wallet_admin_password", "pass",
+                    "admin_password", "pass",
                     "db_name", "dev",
                     "db_user", "root",
                     "db_pass", "root"

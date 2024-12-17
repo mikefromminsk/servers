@@ -1,18 +1,42 @@
 package com.mfm_wallet;
 
-import com.mfm_wallet.mfm_data.DataUtils;
+import com.mfm_wallet.mfm_token.TokenRequests;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class Contract extends DataUtils {
-    public String scriptPath;
+public abstract class Contract extends TokenRequests {
     protected Map<String, Object> response = new LinkedHashMap<>();
-    Map<String, String> params;
     protected abstract void run();
 
+    public String scriptPath;
+    public Map<String, String> params = new HashMap<>();
+
+    public String getString(String key, String defaultValue) {
+        return params.getOrDefault(key, defaultValue);
+    }
+
     public String getString(String key) {
-        return params.get(key);
+        return getString(key, null);
+    }
+
+    public Double getDouble(String key, Double defaultValue) {
+        String value = getString(key);
+        return value == null ? defaultValue : Double.parseDouble(value);
+    }
+
+    public Double getDouble(String key) {
+        return getDouble(key, null);
+    }
+
+    public Long getLong(String key, Long defaultValue) {
+        String value = getString(key);
+        return value == null ? defaultValue : Long.parseLong(value);
+    }
+
+    public Long getLong(String key) {
+        return getLong(key, null);
     }
 
     public String getRequired(String key) {
@@ -23,17 +47,8 @@ public abstract class Contract extends DataUtils {
         return value;
     }
 
-    public Double getDouble(String key) {
-        return getDouble(key, null);
-    }
-
-    public Double getDouble(String key, Double defaultValue) {
-        String value = getString(key);
-        return value == null ? defaultValue : Double.parseDouble(value);
-    }
-
-    public Long getLong(String key, Long defaultValue) {
-        String value = getString(key);
+    public Long getLongRequired(String key, Long defaultValue) {
+        String value = getRequired(key);
         return value == null ? defaultValue : Long.parseLong(value);
     }
 
@@ -41,13 +56,12 @@ public abstract class Contract extends DataUtils {
         return getLongRequired(key, null);
     }
 
-    public Long getLongRequired(String key, Long defaultValue) {
+    public Double getDoubleRequired(String key, Double defaultValue) {
         String value = getRequired(key);
-        return value == null ? defaultValue : Long.parseLong(value);
+        return value == null ? defaultValue : Double.parseDouble(value);
     }
 
     public Double getDoubleRequired(String key) {
-        String value = getRequired(key);
-        return Double.parseDouble(value);
+        return getDoubleRequired(key, null);
     }
 }

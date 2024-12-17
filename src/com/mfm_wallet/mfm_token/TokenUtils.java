@@ -65,7 +65,7 @@ public class TokenUtils extends AnalyticsUtils {
         return result;
     }
 
-    public  void commitTrans() {
+    public void commitTrans() {
         if (transactions != null) {
             Collections.reverse(transactions);
             for (Transaction tran : transactions) {
@@ -81,7 +81,7 @@ public class TokenUtils extends AnalyticsUtils {
         }
     }
 
-    public  void commitAccounts() {
+    public void commitAccounts() {
         int newAccountsCount = 0;
         for (Account account : accounts.values()) {
             if (!allAccounts.containsKey(account.domain + account.address))
@@ -99,7 +99,7 @@ public class TokenUtils extends AnalyticsUtils {
         accounts.clear();
     }
 
-   public void commitTokens() {
+    public void commitTokens() {
         int newTokensCount = 0;
         for (Token token : tokens) {
             if (!allTokens.containsKey(token.domain))
@@ -108,6 +108,13 @@ public class TokenUtils extends AnalyticsUtils {
         }
         trackAccumulate("token_count", newTokensCount);
         tokens.clear();
+    }
+
+    public void commit() {
+        super.commit();
+        commitTrans();
+        commitAccounts();
+        commitTokens();
     }
 
     protected List<Transaction> tokenTrans(String domain, String fromAddress, String toAddress) {

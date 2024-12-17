@@ -7,7 +7,6 @@ import java.util.Map;
 public class TokenAnalytics extends Token {
     @Override
     protected void run() {
-        super.run(params);
         String domain = getRequired("domain");
         response.put("owner", getAccount(domain, "owner"));
 

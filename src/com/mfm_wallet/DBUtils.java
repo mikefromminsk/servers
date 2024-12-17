@@ -1,15 +1,8 @@
 package com.mfm_wallet;
 
-import com.mfm_wallet.model.Account;
-import com.mfm_wallet.model.Token;
-import com.mfm_wallet.model.Transaction;
-import fi.iki.elonen.NanoHTTPD;
-
-import java.util.*;
-
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
 
-class DBUtils extends BaseUtils {
+class DBUtils extends Utils {
 
 
 

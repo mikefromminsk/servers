@@ -1,11 +1,13 @@
 package com.mfm_wallet.mfm_data;
 
-import com.mfm_wallet.mfm_token.TokenRequests;
+import com.mfm_wallet.Contract;
 
 import java.util.*;
 
-public class DataUtils extends TokenRequests {
+public abstract class DataContract extends Contract {
     public static final int MAX_VALUE_SIZE = 256;
+    public static final String GAS_DOMAIN = "usdt";
+    public static final String GAS_OWNER = "admin";
 
     private static final Random random = new Random();
     private static Map<Integer, Map<String, DataRow>> allData = new HashMap<>();
@@ -49,9 +51,14 @@ public class DataUtils extends TokenRequests {
         return row == null ? null : row.value;
     }
 
+    public Long dataGetLong(String path, Long defaultValue) {
+        String data = dataGet(path);
+        return data == null ? defaultValue : Long.parseLong(data);
+    }
+
     public Long dataGetLong(String path) {
-        String dataGet = dataGet(path);
-        return dataGet == null ? null : Long.parseLong(dataGet);
+        String data = dataGet(path);
+        return data == null ? null : Long.parseLong(data);
     }
 
     public List<String> getHistory(String path, int size) {
@@ -63,7 +70,8 @@ public class DataUtils extends TokenRequests {
                 if (response.size() >= size) break;
             }
         }
-        return response.reversed();
+        Collections.reverse(response);
+        return response;
     }
 
     public List<Long> getHistoryLong(String path, int size) {
@@ -75,8 +83,16 @@ public class DataUtils extends TokenRequests {
         return response;
     }
 
-    public void commitData() {
+    public void commit() {
+        Double gas_commission = 0.01 * data.size();
+        if (gas_commission > 0){
+            String gas_address = getRequired("gas_address");
+            String gas_pass = getRequired("gas_pass");
+            if (tokenBalance(GAS_DOMAIN, gas_address) < gas_commission) error("Not enough gas");
+            tokenSend(scriptPath, GAS_DOMAIN, gas_address, GAS_OWNER, gas_commission, gas_pass, null);
+        }
         allData.putAll(data);
         data.clear();
+        super.commit();
     }
 }

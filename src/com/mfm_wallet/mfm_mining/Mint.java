@@ -1,11 +1,12 @@
 package com.mfm_wallet.mfm_mining;
 
-import com.mfm_wallet.Contract;
+import com.mfm_wallet.mfm_data.DataContract;
 
 import java.math.BigInteger;
 import java.util.List;
 
-public class Mint extends Contract {
+
+public class Mint extends DataContract {
 
     Double getReward(String domain) {
         Double token_balance = tokenBalance(domain, "mining");
@@ -23,7 +24,7 @@ public class Mint extends Contract {
         String lastHash = dataGet("mining/" + domain + "/last_hash");
         if (lastHash == null) lastHash = "";
         Long difficulty = dataGetLong("mining/" + domain + "/difficulty");
-        if (difficulty == 0L) difficulty = 1L;
+        if (difficulty == null) difficulty = 1L;
 
         String str = lastHash + domain + nonce;
         String newHash = md5(str);
