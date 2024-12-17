@@ -64,4 +64,8 @@ public abstract class Contract extends TokenRequests {
     public Double getDoubleRequired(String key) {
         return getDoubleRequired(key, null);
     }
+
+    public String getScriptName() {
+        return scriptPath.substring(scriptPath.lastIndexOf('/') + 1, scriptPath.lastIndexOf('.'));
+    }
 }

@@ -40,6 +40,10 @@ public class TokenRequests extends TokenUtils {
             return false;
         }
     }
+
+    public double tokenPrice(String domain) {
+        return getCandleLastValue(domain + "_price");
+    }
 /*
     static boolean tokenSendAndCommit(String domain, String from, String to, double amount, String password), SQLException {
         Account account = getAccount(domain, from);

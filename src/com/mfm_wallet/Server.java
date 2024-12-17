@@ -54,6 +54,10 @@ public class Server extends NanoHTTPD {
                 return new com.mfm_wallet.mfm_exchange.OrderBook();
             case "mfm-exchange/orders.php":
                 return new com.mfm_wallet.mfm_exchange.Orders();
+            case "mfm-exchange/spred.php":
+                return new com.mfm_wallet.mfm_exchange.Spred();
+            case "mfm-wallet/home/api/main.php":
+                return new com.mfm_wallet.mfm_wallet.Main();
             default:
                 error("Unknown path: " + scriptPath);
         }

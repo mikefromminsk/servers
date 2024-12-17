@@ -14,7 +14,7 @@ abstract class ExchangeUtils extends Contract {
 
     public void place(String domain, String address, long isSell, double price, double amount, double total, String pass) {
         String exchangeAddress = "exchange_" + domain;
-        if (botScriptReg(domain, exchangeAddress)) commitTokens();
+        if (botScriptReg(domain, exchangeAddress)) commitAccounts();
 
         if (price != round(price, 2)) error("price tick is 0.01");
         if (price <= 0) error("price less than 0");

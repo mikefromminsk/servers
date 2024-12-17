@@ -16,10 +16,12 @@ public class TokenUtils extends AnalyticsUtils {
     public static final Map<String, Transaction> allTransactions = new LinkedHashMap<>();
     public static final Map<String, Token> allTokens = new LinkedHashMap<>();
 
+    public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
+    public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
+
     Map<String, Account> accounts = new LinkedHashMap<>();
     List<Transaction> transactions = new ArrayList<>();
     List<Token> tokens = new ArrayList<>();
-
 
     public void setTran(Transaction tran) {
         transactions.add(tran);
@@ -104,6 +106,10 @@ public class TokenUtils extends AnalyticsUtils {
         for (Token token : tokens) {
             if (!allTokens.containsKey(token.domain))
                 newTokensCount++;
+            topExchange.add(token);
+            if (topExchange.size() > 5) topExchange.poll();
+            topGainers.add(token);
+            if (topGainers.size() > 5) topGainers.poll();
             allTokens.put(token.domain, token);
         }
         trackAccumulate("token_count", newTokensCount);
