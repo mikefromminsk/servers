@@ -6,9 +6,9 @@ import java.util.Map;
 
 public class Account extends Contract {
     @Override
-    protected void run(Map<String, String> params) {
-        String domain = getRequired(params, "domain");
-        String address = getRequired(params, "address");
+    protected void run() {
+        String domain = getRequired("domain");
+        String address = getRequired("address");
         com.mfm_wallet.model.Account account = getAccount(domain, address);
         if (account == null) error("Account not found");
         response.put("account", account);

@@ -7,9 +7,9 @@ import java.util.Map;
 
 public class Token extends Contract {
     @Override
-    protected void run(Map<String, String> params) {
-        String domain = getRequired(params, "domain");
-        String address = getString(params, "address");
+    protected void run() {
+        String domain = getRequired("domain");
+        String address = getString("address");
         com.mfm_wallet.model.Token token = allTokens.get(domain);
         if (token == null) error("Token not found");
         response.put("token", token);

@@ -32,8 +32,8 @@ public class Funnel extends Contract {
     }
 
     @Override
-    protected void run(Map<String, String> params) {
-        String funnel = getRequired(params, "funnel");
+    protected void run() {
+        String funnel = getRequired("funnel");
         long timeFrom = time() - 60 * 60 * 24 * 7;
 
         List<Step> parsedFunnel = parseFunnel(funnel);

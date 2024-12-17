@@ -9,8 +9,8 @@ import java.util.Map;
 public class Accounts extends Contract {
 
     @Override
-    protected void run(Map<String, String> params) {
-        String address = getRequired(params, "address");
+    protected void run() {
+        String address = getRequired("address");
         List<Account> accounts = getAccounts(address);
         for (Account account : accounts)
             account.token = allTokens.get(account.domain);

@@ -7,12 +7,12 @@ import java.util.Map;
 
 public class Track extends Contract {
     @Override
-    protected void run(Map<String, String> params) {
-        String app = getRequired(params, "app");
-        String name = getRequired(params, "name");
-        String value = getString(params, "value");
-        String user_id = getString(params, "user_id");
-        String session = getString(params, "session");
+    protected void run() {
+        String app = getRequired("app");
+        String name = getRequired("name");
+        String value = getString("value");
+        String user_id = getString("user_id");
+        String session = getString("session");
 
         trackEvent(app, name, value, user_id, session);
         trackAccumulate("app:name");

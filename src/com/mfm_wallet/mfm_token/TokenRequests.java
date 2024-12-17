@@ -1,4 +1,4 @@
-package com.mfm_wallet;
+package com.mfm_wallet.mfm_token;
 
 import com.mfm_wallet.model.Account;
 
@@ -7,15 +7,15 @@ import java.sql.SQLException;
 
 public class TokenRequests extends TokenUtils {
 
-    static String tokenKey(String domain, String address, String password, String prevKey) throws NoSuchAlgorithmException {
+    static String tokenKey(String domain, String address, String password, String prevKey) {
         return md5(domain + address + password + prevKey);
     }
 
-    static String tokenNextHash(String domain, String address, String password, String prevKey) throws NoSuchAlgorithmException {
+    static String tokenNextHash(String domain, String address, String password, String prevKey) {
         return md5(tokenKey(domain, address, password, prevKey));
     }
 
-    static String tokenPass(String domain, String address, String password) throws NoSuchAlgorithmException, SQLException {
+    public static String tokenPass(String domain, String address, String password){
         /*Account account = DBUtils.getAccount(domain, address);
         String key = tokenKey(domain, address, password, account.prevKey);
         String nextHash = tokenNextHash(domain, address, password, key);
@@ -23,8 +23,19 @@ public class TokenRequests extends TokenUtils {
         return null;
     }
 
+    public void tokenRegScript(String domain, String address, String script) {
+        if (getAccount(domain, address) == null) {
+            Account account = new Account();
+            account.domain = domain;
+            account.address = address;
+            account.next_hash = tokenNextHash(domain, address, domain, null);
+            account.balance = 0.0;
+            account.delegate = script;
+            setAccount(account);
+        }
+    }
 /*
-    static boolean tokenSendAndCommit(String domain, String from, String to, double amount, String password) throws NoSuchAlgorithmException, SQLException {
+    static boolean tokenSendAndCommit(String domain, String from, String to, double amount, String password), SQLException {
         Account account = getAccount(domain, from);
         if (account != null) {
             String key = tokenKey(domain, from, password, (String) account.get("prev_key"));
@@ -41,7 +52,7 @@ public class TokenRequests extends TokenUtils {
         }
     }
 
-    public static boolean tokenRegAccount(String domain, String address, String password, double amount) throws NoSuchAlgorithmException, SQLException {
+    public static boolean tokenRegAccount(String domain, String address, String password, double amount), SQLException {
         return requestEquals("/mfm-token/send.php", map(
                 "domain", domain,
                 "from_address", GENESIS_ADDRESS,
@@ -51,28 +62,6 @@ public class TokenRequests extends TokenUtils {
         ));
     }
 
-    public static boolean tokenRegScript(String domain, String address, String script) throws NoSuchAlgorithmException, SQLException {
-        if (getAccount(domain, address) == null) {
-            Backend.postToLocalhost("/mfm-token/send.php", map(
-                    "domain", domain,
-                    "from_address", GENESIS_ADDRESS,
-                    "to_address", address,
-                    "amount", "0",
-                    "pass", ":" + md5(UUID.randomUUID().toString()),
-                    "delegate", script
-            ));
-            return requestEquals("/mfm-token/send.php", map(
-                    "domain", domain,
-                    "from_address", GENESIS_ADDRESS,
-                    "to_address", address,
-                    "amount", "0",
-                    "pass", ":" + md5(UUID.randomUUID().toString()),
-                    "delegate", script
-            ));
-        } else {
-            return false;
-        }
-    }
 
     public static boolean tokenDelegate(String domain, String address, String pass, String script) throws SQLException {
         if (getAccount(domain, address) != null) {
@@ -88,7 +77,7 @@ public class TokenRequests extends TokenUtils {
         }
     }
 
-    public static void tokenChangePass(String domain, String address, String pass) throws NoSuchAlgorithmException, SQLException {
+    public static void tokenChangePass(String domain, String address, String pass), SQLException {
         tokenSend(domain, address, address, 0, pass);
     }*/
 

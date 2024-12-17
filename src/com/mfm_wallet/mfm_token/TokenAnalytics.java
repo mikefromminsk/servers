@@ -6,9 +6,9 @@ import java.util.Map;
 
 public class TokenAnalytics extends Token {
     @Override
-    protected void run(Map<String, String> params) {
+    protected void run() {
         super.run(params);
-        String domain = getRequired(params, "domain");
+        String domain = getRequired("domain");
         response.put("owner", getAccount(domain, "owner"));
 
         Map<String, Float> analytics = new LinkedHashMap<>();

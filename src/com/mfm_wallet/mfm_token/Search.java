@@ -10,8 +10,8 @@ import java.util.Map;
 
 public class Search extends Contract {
     @Override
-    protected void run(Map<String, String> params) {
-        String search_text = getRequired(params, "search_text");
+    protected void run() {
+        String search_text = getRequired("search_text");
         List<Token> tokens = new ArrayList<>();
         tokens.add(getToken(search_text));
         response.put("tokens", tokens);

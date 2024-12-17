@@ -13,6 +13,8 @@ import java.io.StringWriter;
 import java.util.*;
 
 import static com.mfm_wallet.BaseUtils.*;
+import static fi.iki.elonen.NanoHTTPD.Response.Status.INTERNAL_ERROR;
+import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 
 public class Server extends NanoHTTPD {
     static String MIME_JSON = "application/json";
@@ -43,25 +45,23 @@ public class Server extends NanoHTTPD {
                 return new com.mfm_wallet.mfm_analytics.Candles();
             case "mfm-analytics/funnel.php":
                 return new com.mfm_wallet.mfm_analytics.Funnel();
+            case "mfm-mining/mint.php":
+                return new com.mfm_wallet.mfm_mining.Mint();
             default:
                 error("Unknown path: " + scriptPath);
         }
         return null;
     }
 
-
-    void commit(Map<String, Object> response) {
-        response.put("success", "true");
-    }
-
     @Override
     public Response serve(IHTTPSession session) {
-        Long start = System.currentTimeMillis();
-        Map<String, String> params = parseParams(session);
-        Contract contract = getContract(params.get("script_path"));
+        Long start = time();
+        String scriptPath = session.getUri().substring(1);
+        Contract contract = getContract(scriptPath);
+        contract.params = parseParams(session);
+        contract.scriptPath = scriptPath;
         try {
-            contract.run(params);
-            commit(contract.response);
+            contract.run();
         } catch (Exception e) {
             Map<String, Object> error = new LinkedHashMap<>();
             if (e.getMessage().charAt(0) == '{') {
@@ -80,15 +80,18 @@ public class Server extends NanoHTTPD {
             stack.removeLast();
             stack.removeLast();
             error.put("stack", stack);
-            System.out.println("error: " + params.get("script_path"));
-            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_JSON, gson.toJson(error));
+            System.out.println("error: " + scriptPath);
+            return newFixedLengthResponse(INTERNAL_ERROR, MIME_JSON, gson.toJson(error));
         }
-        contract.commit();
-        System.out.println("success: " + params.get("script_path") + " took " + (System.currentTimeMillis() - start) + "ms");
-        Response response = newFixedLengthResponse(
-                NanoHTTPD.Response.Status.OK,
-                "application/json",
-                gson.toJson(contract.response));
+        contract.commitData();
+        contract.commitAnalytics();
+        contract.commitObjects();
+        contract.commitTrans();
+        contract.commitAccounts();
+        contract.commitTokens();
+        contract.response.put("success", "true");
+        System.out.println("success: " + scriptPath + " took " + (time() - start) + "ms");
+        Response response = newFixedLengthResponse(OK, MIME_JSON, gson.toJson(contract.response));
         response.addHeader("Access-Control-Allow-Origin", "*");
         return response;
     }

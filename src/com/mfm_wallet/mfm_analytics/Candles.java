@@ -6,10 +6,10 @@ import java.util.Map;
 
 public class Candles extends Contract {
     @Override
-    protected void run(Map<String, String> params) {
-        String key = getRequired(params, "key");
-        String accomulate_key = getRequired(params, "accomulate_key");
-        String period_name = getRequired(params, "period_name");
+    protected void run() {
+        String key = getRequired("key");
+        String accomulate_key = getRequired("accomulate_key");
+        String period_name = getRequired("period_name");
 
         response.put("candles", getCandles(key, period_name, 50));
         response.put("accomulate", getAccumulate(accomulate_key, period_name, 50));

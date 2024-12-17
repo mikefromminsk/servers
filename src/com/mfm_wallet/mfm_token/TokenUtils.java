@@ -1,5 +1,6 @@
-package com.mfm_wallet;
+package com.mfm_wallet.mfm_token;
 
+import com.mfm_wallet.mfm_analytics.AnalyticsUtils;
 import com.mfm_wallet.model.Account;
 import com.mfm_wallet.model.Token;
 import com.mfm_wallet.model.Transaction;
@@ -20,15 +21,15 @@ public class TokenUtils extends AnalyticsUtils {
     List<Token> tokens = new ArrayList<>();
 
 
-    void saveTran(Transaction tran) {
+    void setTran(Transaction tran) {
         transactions.add(tran);
     }
 
-    void saveToken(Token token) {
+    void setToken(Token token) {
         tokens.add(token);
     }
 
-    void saveAccount(Account account) {
+    void setAccount(Account account) {
         accounts.put(account.domain + account.address, account);
     }
 
@@ -64,7 +65,7 @@ public class TokenUtils extends AnalyticsUtils {
         return result;
     }
 
-    void commitTrans() {
+    public  void commitTrans() {
         if (transactions != null) {
             Collections.reverse(transactions);
             for (Transaction tran : transactions) {
@@ -80,7 +81,7 @@ public class TokenUtils extends AnalyticsUtils {
         }
     }
 
-    void commitAccounts() {
+    public  void commitAccounts() {
         int newAccountsCount = 0;
         for (Account account : accounts.values()) {
             if (!allAccounts.containsKey(account.domain + account.address))
@@ -98,7 +99,7 @@ public class TokenUtils extends AnalyticsUtils {
         accounts.clear();
     }
 
-    void commitTokens() {
+   public void commitTokens() {
         int newTokensCount = 0;
         for (Token token : tokens) {
             if (!allTokens.containsKey(token.domain))
@@ -107,12 +108,6 @@ public class TokenUtils extends AnalyticsUtils {
         }
         trackAccumulate("token_count", newTokensCount);
         tokens.clear();
-    }
-
-    void commitTokenUtils() {
-        commitAccounts();
-        commitTrans();
-        commitTokens();
     }
 
     protected List<Transaction> tokenTrans(String domain, String fromAddress, String toAddress) {
@@ -130,7 +125,7 @@ public class TokenUtils extends AnalyticsUtils {
         return result;
     }
 
-    Double tokenBalance(String domain, String address) {
+    public Double tokenBalance(String domain, String address) {
         Account account = getAccount(domain, address);
         return account != null ? account.balance : null;
     }
@@ -157,9 +152,9 @@ public class TokenUtils extends AnalyticsUtils {
                 owner.next_hash = "";
                 owner.balance = amount;
                 owner.delegate = "mfm-token/send.php";
-                saveAccount(owner);
+                setAccount(owner);
                 if (amount > 0) {
-                    saveToken(new Token(domain, to_address, amount, time()));
+                    setToken(new Token(domain, to_address, amount, time()));
                     trackAccumulate("tokens_count");
                 }
             }
@@ -171,7 +166,7 @@ public class TokenUtils extends AnalyticsUtils {
                 to.next_hash = next_hash;
                 to.balance = 0.0;
                 to.delegate = delegate;
-                saveAccount(to);
+                setAccount(to);
             }
         }
 
@@ -189,20 +184,20 @@ public class TokenUtils extends AnalyticsUtils {
 
         if (from.delegate != null) {
             from.balance = Math.round((from.balance - amount) * 100) / 100.0;
-            saveAccount(from);
+            setAccount(from);
         } else {
             from.prev_key = key;
             from.next_hash = next_hash;
             from.balance = Math.round((from.balance - amount) * 100) / 100.0;
-            saveAccount(from);
+            setAccount(from);
         }
 
         double fee = 0;
 
         to.balance = Math.round((to.balance + amount - fee) * 100) / 100.0;
-        saveAccount(to);
+        setAccount(to);
 
-        saveTran(new Transaction(domain,
+        setTran(new Transaction(domain,
                 from_address,
                 to_address,
                 amount,
@@ -213,10 +208,5 @@ public class TokenUtils extends AnalyticsUtils {
                 time()
         ));
         return next_hash;
-    }
-
-    public void commit() {
-        commitTokenUtils();
-        commitAnalytics();
     }
 }

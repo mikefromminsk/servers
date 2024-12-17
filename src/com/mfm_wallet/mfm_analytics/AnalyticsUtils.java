@@ -1,5 +1,6 @@
-package com.mfm_wallet;
+package com.mfm_wallet.mfm_analytics;
 
+import com.mfm_wallet.BaseUtils;
 import com.mfm_wallet.model.Candle;
 import com.mfm_wallet.model.Event;
 import com.mfm_wallet.model.Field;
