@@ -9,8 +9,8 @@ import static com.mfm_wallet.mfm_data.DataContract.GAS_DOMAIN;
 
 abstract class ExchangeUtils extends Contract {
 
-    private static final Map<Integer, Order> allOrders = new HashMap<>();
-    private final Map<Integer, Order> orders = new HashMap<>();
+    private static final Map<Long, Order> allOrders = new HashMap<>();
+    private final Map<Long, Order> orders = new HashMap<>();
 
     public void place(String domain, String address, long isSell, double price, double amount, double total, String pass) {
         String exchangeAddress = "exchange_" + domain;
@@ -30,9 +30,9 @@ abstract class ExchangeUtils extends Contract {
         }
     }
 
-    public int createOrder(String address, String domain, int isSell, double price, double amount, double total) {
+    public long createOrder(String address, String domain, int isSell, double price, double amount, double total) {
         Order order = new Order();
-        order.orderId = random.nextInt();
+        order.orderId = random.nextLong();
         order.address = address;
         order.domain = domain;
         order.isSell = isSell;
@@ -61,7 +61,7 @@ abstract class ExchangeUtils extends Contract {
     public void orderFillSell(String address, String domain, double price, double amount, double total, String pass) {
         String exchangeAddress = "exchange_" + domain;
         tokenSend(scriptPath, domain, address, exchangeAddress, amount, pass, null);
-        int orderId = createOrder(address, domain, 1, price, amount, total);
+        long  orderId = createOrder(address, domain, 1, price, amount, total);
         double tradeVolume = 0;
         double lastTradePrice = 0;
 
@@ -99,7 +99,7 @@ abstract class ExchangeUtils extends Contract {
     public void orderFillBuy(String address, String domain, double price, double amount, double total, String pass) {
         String exchangeAddress = "exchange_" + domain;
         tokenSend(scriptPath, GAS_DOMAIN, address, exchangeAddress, total, pass, null);
-        int orderId = createOrder(address, domain, 0, price, amount, total);
+        long orderId = createOrder(address, domain, 0, price, amount, total);
         double tradeVolume = 0;
         double lastTradePrice = 0;
 
@@ -151,7 +151,7 @@ abstract class ExchangeUtils extends Contract {
         }
     }
 
-    public void cancel(int orderId) {
+    public void cancel(long orderId) {
         Order order = orders.get(orderId);
         if (order == null) {
             order = allOrders.get(orderId);
@@ -224,7 +224,7 @@ abstract class ExchangeUtils extends Contract {
         orders.clear();
     }
 
-    private void updateOrder(int orderId, double amountFilled, double totalFilled, int status) {
+    private void updateOrder(long orderId, double amountFilled, double totalFilled, int status) {
         Order order = orders.get(orderId);
         if (order == null) {
             order = allOrders.get(orderId).clone();
@@ -237,7 +237,7 @@ abstract class ExchangeUtils extends Contract {
         }
     }
 
-    private void updateOrder(int orderId, int status) {
+    private void updateOrder(long orderId, int status) {
         Order order = orders.get(orderId);
         if (order == null) {
             order = allOrders.get(orderId);
@@ -249,7 +249,7 @@ abstract class ExchangeUtils extends Contract {
     }
 
     public class Order {
-        public int orderId;
+        public long orderId;
         public String address;
         public String domain;
         public int isSell;
@@ -284,6 +284,7 @@ abstract class ExchangeUtils extends Contract {
     public class PriceLevel {
         public double price;
         public double amount;
+        public double percent;
 
         public PriceLevel(double price, double amount) {
             this.price = price;
