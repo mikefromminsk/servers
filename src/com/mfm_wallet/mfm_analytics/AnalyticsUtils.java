@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AnalyticsUtils extends Utils {
-    static Random random = new Random();
     static final Map<String, Long> defaultChartSettings = new HashMap<>();
     static final Map<String, List<Candle>> allCharts = new ConcurrentHashMap<>();
     static final Map<Integer, Event> allEvents = new ConcurrentHashMap<>();
@@ -19,7 +18,7 @@ public class AnalyticsUtils extends Utils {
     static final Map<String, List<Integer>> userEvents = new ConcurrentHashMap<>();
     static final Map<Integer, List<Field>> allObjects = new ConcurrentHashMap<>();
 
-    public Map<String, Float> liner = new ConcurrentHashMap<>();
+    public Map<String, Double> liner = new ConcurrentHashMap<>();
     public List<Event> events = new ArrayList<>();
     public Map<Integer, List<Field>> objects = new ConcurrentHashMap<>();
 
@@ -130,7 +129,7 @@ public class AnalyticsUtils extends Utils {
         defaultChartSettings.put("W", 60L * 60 * 24 * 7);
     }
 
-    public void trackLinear(String key, float value) {
+    public void trackLinear(String key, double value) {
         liner.put(key, value);
     }
 
@@ -138,14 +137,14 @@ public class AnalyticsUtils extends Utils {
         trackLinear(key, 1);
     }
 
-    public void trackAccumulate(String key, float value) {
+    public void trackAccumulate(String key, double value) {
         trackLinear(key, getCandleLastValue(key) + value);
     }
 
     void commitCharts() {
         for (String key : liner.keySet()) {
             long timestamp = time();
-            Float value = liner.get(key);
+            Double value = liner.get(key);
             for (String period_name: defaultChartSettings.keySet()) {
                 long period = defaultChartSettings.get(period_name);
                 Candle last_candle = null;
@@ -187,7 +186,7 @@ public class AnalyticsUtils extends Utils {
         for (Candle candle : chart)
             candlesMap.put(candle.period_time, candle);
         List<Candle> result = new ArrayList<>();
-        float lastClose = lastCandle.close;
+        double lastClose = lastCandle.close;
         long periodTime = (time() / period) * period;
         for (long i = periodTime; i >= firstCandle.period_time && result.size() < count; i -= period) {
             Candle item = candlesMap.get(i);
@@ -216,13 +215,13 @@ public class AnalyticsUtils extends Utils {
         return candles;
     }
 
-    public float getCandleLastValue(String key) {
+    public double getCandleLastValue(String key) {
         List<Candle> chart = allCharts.get(key + "M");
         if (chart == null || chart.isEmpty()) return 0;
         return chart.get(chart.size() - 1).close;
     }
 
-    public float getCandleChange24(String key) {
+    public double getCandleChange24(String key) {
         List<Candle> chart = getCandles(key, "D", 2);
         if (chart == null || chart.size() < 2) return 0;
         return chart.get(0).close - chart.get(1).close;

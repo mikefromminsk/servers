@@ -21,15 +21,15 @@ public class TokenUtils extends AnalyticsUtils {
     List<Token> tokens = new ArrayList<>();
 
 
-    void setTran(Transaction tran) {
+    public void setTran(Transaction tran) {
         transactions.add(tran);
     }
 
-    void setToken(Token token) {
+    public void setToken(Token token) {
         tokens.add(token);
     }
 
-    void setAccount(Account account) {
+    public void setAccount(Account account) {
         accounts.put(account.domain + account.address, account);
     }
 

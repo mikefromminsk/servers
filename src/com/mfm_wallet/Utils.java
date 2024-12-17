@@ -7,9 +7,11 @@ import fi.iki.elonen.NanoHTTPD;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class Utils {
 
+    public static Random random = new Random();
     public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public static String md5(String input) {

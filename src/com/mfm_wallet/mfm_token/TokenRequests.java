@@ -15,15 +15,18 @@ public class TokenRequests extends TokenUtils {
         return md5(tokenKey(domain, address, password, prevKey));
     }
 
-    public static String tokenPass(String domain, String address, String password){
-        /*Account account = DBUtils.getAccount(domain, address);
-        String key = tokenKey(domain, address, password, account.prevKey);
-        String nextHash = tokenNextHash(domain, address, password, key);
-        return key + ":" + nextHash;*/
-        return null;
+    public String tokenPass(String domain, String address){
+        return tokenPass(domain, address, address);
     }
 
-    public void tokenRegScript(String domain, String address, String script) {
+    public String tokenPass(String domain, String address, String password){
+        Account account = getAccount(domain, address);
+        String key = tokenKey(domain, address, password, account.prev_key);
+        String nextHash = tokenNextHash(domain, address, password, key);
+        return key + ":" + nextHash;
+    }
+
+    public boolean tokenRegScript(String domain, String address, String script) {
         if (getAccount(domain, address) == null) {
             Account account = new Account();
             account.domain = domain;
@@ -32,6 +35,9 @@ public class TokenRequests extends TokenUtils {
             account.balance = 0.0;
             account.delegate = script;
             setAccount(account);
+            return true;
+        } else {
+            return false;
         }
     }
 /*
