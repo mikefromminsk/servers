@@ -1,4 +1,6 @@
-package com.sockets.test;
+package com.mfm_wallet.mfm_exchange;
+
+import com.sockets.test.utils.InfiniteTimer;
 
 import java.util.HashMap;
 import java.util.Map;

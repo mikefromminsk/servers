@@ -5,7 +5,9 @@ import com.mfm_wallet.model.Token;
 
 import java.util.*;
 
+import static com.mfm_wallet.Node.broadcast;
 import static com.mfm_wallet.mfm_data.DataContract.GAS_DOMAIN;
+import static com.sockets.test.utils.Params.map;
 
 abstract class ExchangeUtils extends Contract {
 
@@ -61,7 +63,7 @@ abstract class ExchangeUtils extends Contract {
     public void orderFillSell(String address, String domain, double price, double amount, double total, String pass) {
         String exchangeAddress = "exchange_" + domain;
         tokenSend(scriptPath, domain, address, exchangeAddress, amount, pass, null);
-        long  orderId = createOrder(address, domain, 1, price, amount, total);
+        long orderId = createOrder(address, domain, 1, price, amount, total);
         double tradeVolume = 0;
         double lastTradePrice = 0;
 
@@ -142,9 +144,12 @@ abstract class ExchangeUtils extends Contract {
             double lastPrice = getCandleLastValue(domain + "_price");
             if (price != lastPrice) {
                 trackLinear(domain + "_price", price);
-                //broadcast("price", new BroadcastMessage(domain, price));
+                broadcast("price", map(
+                        "domain", domain,
+                        "price", price
+                ));
             }
-            Token token = allTokens.get(domain);
+            Token token = tokensByDomain.get(domain);
             token.price24 = getCandleChange24(domain + "_price");
             token.volume24 = getCandleChange24(domain + "_volume");
             setToken(token);
@@ -161,13 +166,17 @@ abstract class ExchangeUtils extends Contract {
         if (order.isSell == 1) {
             double amountToGet = round(order.amount - order.amountFilled, 2);
             double totalToGet = round(order.totalFilled, 2);
-            if (amountToGet > 0) tokenSend(scriptPath, order.domain, exchangeAddress, order.address, amountToGet, tokenPass(order.domain, exchangeAddress), null);
-            if (totalToGet > 0) tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalToGet, tokenPass(GAS_DOMAIN, exchangeAddress), null);
+            if (amountToGet > 0)
+                tokenSend(scriptPath, order.domain, exchangeAddress, order.address, amountToGet, tokenPass(order.domain, exchangeAddress), null);
+            if (totalToGet > 0)
+                tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalToGet, tokenPass(GAS_DOMAIN, exchangeAddress), null);
         } else {
             double totalToGet = round(order.total - order.totalFilled, 2);
             double amountToGet = round(order.amountFilled, 2);
-            if (totalToGet > 0) tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalToGet, tokenPass(GAS_DOMAIN, exchangeAddress), null);
-            if (amountToGet > 0) tokenSend(scriptPath, order.domain, exchangeAddress, order.address, amountToGet, tokenPass(order.domain, exchangeAddress), null);
+            if (totalToGet > 0)
+                tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalToGet, tokenPass(GAS_DOMAIN, exchangeAddress), null);
+            if (amountToGet > 0)
+                tokenSend(scriptPath, order.domain, exchangeAddress, order.address, amountToGet, tokenPass(order.domain, exchangeAddress), null);
         }
         updateOrder(orderId, -1);
     }

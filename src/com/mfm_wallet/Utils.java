@@ -5,6 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.sockets.test.utils.MD5;
 import fi.iki.elonen.NanoHTTPD;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -25,7 +30,7 @@ public class Utils {
             throw new RuntimeException(gson.toJson(message));
         }
     }
-    
+
     public static Double round(Double value, int precision) {
         return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
     }
@@ -44,11 +49,22 @@ public class Utils {
         return params;
     }
 
-    public static void broadcast(String channel, String message) {
-        // Implement broadcast logic here
-    }
-
     public static Long time() {
         return System.currentTimeMillis() / 1000;
+    }
+
+    static String readFile(String path) throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded);
+    }
+
+    public static void writeFile(String path, Object object) throws IOException {
+        Files.write(Paths.get(path), gson.toJson(object).getBytes());
+    }
+
+    public static int getPortOffset(String domain) {
+        String hash = MD5.hash(domain);
+        BigInteger big = new BigInteger(hash, 16);
+        return big.mod(BigInteger.valueOf(16)).intValue();
     }
 }

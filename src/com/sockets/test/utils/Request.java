@@ -1,34 +1,32 @@
-package com.sockets.test;
+package com.sockets.test.utils;
 
 import com.google.gson.Gson;
-import com.sockets.test.utils.StringUtils;
-import com.sockets.test.utils.Success;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class Backend {
+public class Request {
     public static Gson json = new Gson();
 
-    public static void postToLocalhost(String redirectUrl) {
-        postToLocalhost(redirectUrl, null, null, null);
+    public static void post(String redirectUrl) {
+        post(redirectUrl, null, null, null);
     }
 
-    public static void postToLocalhost(String redirectUrl,
-                                       Object data) {
-        postToLocalhost(redirectUrl, data, null, null);
+    public static void post(String redirectUrl,
+                            Object data) {
+        post(redirectUrl, data, null, null);
     }
 
-    public static void postToLocalhost(String redirectUrl,
-                                       Object data,
-                                       Success success) {
-        postToLocalhost(redirectUrl, data, success, null);
+    public static void post(String redirectUrl,
+                            Object data,
+                            Success success) {
+        post(redirectUrl, data, success, null);
     }
 
-    public static void postToLocalhost(String redirectUrl,
-                                       Object data,
-                                       Success success,
-                                       Success error) {
+    public static void post(String redirectUrl,
+                            Object data,
+                            Success success,
+                            Success error) {
         try {
             if (redirectUrl == null) {
                 return;

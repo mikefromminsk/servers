@@ -3,6 +3,7 @@ package com.mfm_wallet.mfm_exchange;
 import java.util.List;
 import java.util.Random;
 
+import static com.mfm_wallet.Node.broadcast;
 import static com.mfm_wallet.mfm_data.DataContract.GAS_DOMAIN;
 import static com.sockets.test.utils.Params.map;
 
@@ -111,8 +112,8 @@ public class Spred extends ExchangeUtils {
                     tokenPass(domain, botAddress));
         }
 
-        //String topic = "orderbook:" + domain;
-        //broadcast(topic, Map.of("topic", topic));
+        String topic = "orderbook:" + domain;
+        broadcast(topic, map("topic", topic));
     }
 
     public void placeRange(String domain,

@@ -1,7 +1,5 @@
 package com.sockets.test.utils;
 
-import com.sockets.test.Backend;
-
 import java.util.HashMap;
 
 public class Wallet {
@@ -29,7 +27,7 @@ public class Wallet {
                             Success success,
                             Success error) {
         calcKeyHash(fromAddress, password, domain, prev_key, pass -> {
-            Backend.postToLocalhost("/mfm-token/send", new HashMap<String, String>() {{
+            Request.post("/mfm-token/send", new HashMap<String, String>() {{
                 put("domain", domain);
                 put("from_address", fromAddress);
                 put("to_address", toAddress);
@@ -45,7 +43,7 @@ public class Wallet {
                             Success success,
                             Success error) {
         calcStartHash(address, password, domain, pass -> {
-            Backend.postToLocalhost("/mfm-token/send", new HashMap<String, String>() {{
+            Request.post("/mfm-token/send", new HashMap<String, String>() {{
                 put("domain", domain);
                 put("from_address", "owner");
                 put("to_address", address);
@@ -62,11 +60,11 @@ public class Wallet {
                             String amount,
                             Success success,
                             Success error) {
-        Backend.postToLocalhost(":8003/mfm-token/account.php", new HashMap<String, String>() {{
+        Request.post(":8003/mfm-token/account.php", new HashMap<String, String>() {{
             put("domain", domain);
             put("address", fromAddress);
         }}, response -> {
-            HashMap<String, String> data = Backend.json.fromJson(response, HashMap.class);
+            HashMap<String, String> data = Request.json.fromJson(response, HashMap.class);
             send(fromAddress, password, domain, data.get("prev_key"), toAddress, amount, success, error);
         }, response -> {
             reg(fromAddress, password, domain, response1 -> {

@@ -4,7 +4,6 @@ import com.mfm_wallet.Contract;
 import com.mfm_wallet.model.Account;
 
 import java.util.List;
-import java.util.Map;
 
 public class Accounts extends Contract {
 
@@ -13,7 +12,7 @@ public class Accounts extends Contract {
         String address = getRequired("address");
         List<Account> accounts = getAccounts(address);
         for (Account account : accounts)
-            account.token = allTokens.get(account.domain);
+            account.token = tokensByDomain.get(account.domain);
         response.put("accounts", accounts);
     }
 }

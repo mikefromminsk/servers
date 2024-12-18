@@ -5,49 +5,56 @@ import com.mfm_wallet.model.Account;
 import com.mfm_wallet.model.Token;
 import com.mfm_wallet.model.Transaction;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+
+import static com.mfm_wallet.Node.broadcast;
 
 public class TokenUtils extends AnalyticsUtils {
     static final String GENESIS_ADDRESS = "owner";
 
+    public static final List<Transaction> transHistory = new ArrayList<>();
+    public static Long transHistorySaveTime = 0L;
     public static final Map<String, List<String>> userDomains = new LinkedHashMap<>();
     public static final Map<String, Account> allAccounts = new LinkedHashMap<>();
-    public static final Map<String, List<String>> userTransactions = new LinkedHashMap<>();
-    public static final Map<String, Transaction> allTransactions = new LinkedHashMap<>();
-    public static final Map<String, Token> allTokens = new LinkedHashMap<>();
+    public static final Map<String, List<String>> transByUser = new LinkedHashMap<>();
+    public static final Map<String, Transaction> transByHash = new LinkedHashMap<>();
+    public static final Map<String, Token> tokensByDomain = new LinkedHashMap<>();
 
     public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
     public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
 
-    Map<String, Account> accounts = new LinkedHashMap<>();
-    List<Transaction> transactions = new ArrayList<>();
-    List<Token> tokens = new ArrayList<>();
+    Map<String, Account> accountsNew = new LinkedHashMap<>();
+    List<Transaction> transactionsNew = new ArrayList<>();
+    List<Token> tokensNew = new ArrayList<>();
 
     public void setTran(Transaction tran) {
-        transactions.add(tran);
+        transactionsNew.add(tran);
     }
 
     public void setToken(Token token) {
-        tokens.add(token);
+        tokensNew.add(token);
     }
 
     public void setAccount(Account account) {
-        accounts.put(account.domain + account.address, account);
+        accountsNew.put(account.domain + account.address, account);
     }
 
     public Token getToken(String domain) {
-        Token token = allTokens.get(domain);
+        Token token = tokensByDomain.get(domain);
         if (token != null)
             token = token.clone();
         return token;
     }
 
     protected Transaction getTran(String nextHash) {
-        return allTransactions.get(nextHash);
+        return transByHash.get(nextHash);
     }
 
     public Account getAccount(String domain, String address) {
-        Account account = accounts.get(domain + address);
+        Account account = accountsNew.get(domain + address);
         if (account == null) {
             account = allAccounts.get(domain + address);
             if (account != null)
@@ -67,25 +74,40 @@ public class TokenUtils extends AnalyticsUtils {
         return result;
     }
 
-    public void commitTrans() {
-        if (transactions != null) {
-            Collections.reverse(transactions);
-            for (Transaction tran : transactions) {
-                allTransactions.put(tran.next_hash, tran);
-                if (!userTransactions.containsKey(tran.from))
-                    userTransactions.put(tran.from, new ArrayList<>());
-                userTransactions.get(tran.from).add(tran.next_hash);
-                broadcast("transactions", gson.toJson(tran));
+    public synchronized void commitTrans() {
+        if (transactionsNew != null) {
+            Collections.reverse(transactionsNew);
+            for (Transaction tran : transactionsNew) {
+                transHistory.add(tran);
+                transByHash.put(tran.next_hash, tran);
+                if (!transByUser.containsKey(tran.from))
+                    transByUser.put(tran.from, new ArrayList<>());
+                transByUser.get(tran.from).add(tran.next_hash);
+                if (transHistorySaveTime != 0) {
+                    broadcast("transactions", tran);
+                }
                 trackAccumulate(tran.domain + "_trans");
             }
-            trackAccumulate("trans_count", transactions.size());
-            transactions.clear();
+            trackAccumulate("trans_count", transactionsNew.size());
+            if (time() > transHistorySaveTime + 60) {
+                 if (transHistorySaveTime != 0) {
+                    new Thread(() -> {
+                        try {
+                            writeFile("trans.json", transHistory);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).start();
+                }
+                transHistorySaveTime = time();
+            }
+            transactionsNew.clear();
         }
     }
 
     public void commitAccounts() {
         int newAccountsCount = 0;
-        for (Account account : accounts.values()) {
+        for (Account account : accountsNew.values()) {
             if (!allAccounts.containsKey(account.domain + account.address))
                 newAccountsCount++;
             allAccounts.put(account.domain + account.address, account);
@@ -98,22 +120,22 @@ public class TokenUtils extends AnalyticsUtils {
             trackAccumulate(account.domain + "_accounts");
         }
         trackAccumulate("accounts_count", newAccountsCount);
-        accounts.clear();
+        accountsNew.clear();
     }
 
     public void commitTokens() {
         int newTokensCount = 0;
-        for (Token token : tokens) {
-            if (!allTokens.containsKey(token.domain))
+        for (Token token : tokensNew) {
+            if (!tokensByDomain.containsKey(token.domain))
                 newTokensCount++;
             topExchange.add(token);
             if (topExchange.size() > 5) topExchange.poll();
             topGainers.add(token);
             if (topGainers.size() > 5) topGainers.poll();
-            allTokens.put(token.domain, token);
+            tokensByDomain.put(token.domain, token);
         }
         trackAccumulate("token_count", newTokensCount);
-        tokens.clear();
+        tokensNew.clear();
     }
 
     public void commit() {
@@ -125,9 +147,9 @@ public class TokenUtils extends AnalyticsUtils {
 
     protected List<Transaction> tokenTrans(String domain, String fromAddress, String toAddress) {
         List<Transaction> result = new ArrayList<>();
-        if (userTransactions.containsKey(fromAddress)) {
-            for (String nextHash : userTransactions.get(fromAddress)) {
-                Transaction tran = allTransactions.get(nextHash);
+        if (transByUser.containsKey(fromAddress)) {
+            for (String nextHash : transByUser.get(fromAddress)) {
+                Transaction tran = transByHash.get(nextHash);
                 if (tran != null && tran.domain.equals(domain)) {
                     if (toAddress == null || toAddress.equals(tran.to))
                         result.add(tran);
@@ -189,7 +211,7 @@ public class TokenUtils extends AnalyticsUtils {
             error(domain.toUpperCase() + " balance is not enough in " + from_address + " wallet. Balance: " + from.balance + " Need: " + amount);
         if (to == null) error(to_address + " receiver doesn't exist");
         if (from.delegate != null) {
-            if (!from.delegate.equals(scriptPath))
+            if (scriptPath != null && !from.delegate.equals(scriptPath))
                 error("script " + scriptPath + " cannot use " + from_address + " address. Only " + from.delegate);
         } else {
             if (!from.next_hash.equals(md5(key))) error(domain + " key is not right");

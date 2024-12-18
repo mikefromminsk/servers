@@ -1,7 +1,6 @@
 package com.sockets.test;
 
 import org.apache.ftpserver.DataConnectionConfigurationFactory;
-import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.listener.ListenerFactory;
@@ -16,14 +15,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-public class SimpleFtpServer {
+public class FtpServer {
 
     private final int ftpPort;
     private final int passiveStartPort;
     private final int passiveEndPort;
-    private FtpServer server;
+    private org.apache.ftpserver.FtpServer server;
 
-    public SimpleFtpServer(int ftpPort, int passiveStartPort, int passiveEndPort) {
+    public FtpServer(int ftpPort, int passiveStartPort, int passiveEndPort) {
         this.ftpPort = ftpPort;
         this.passiveStartPort = passiveStartPort;
         this.passiveEndPort = passiveEndPort;

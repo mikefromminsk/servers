@@ -5,6 +5,8 @@ import com.mfm_wallet.mfm_data.DataContract;
 import java.math.BigInteger;
 import java.util.List;
 
+import static com.mfm_wallet.Node.broadcast;
+import static com.sockets.test.utils.Params.map;
 
 public class Mint extends DataContract {
 
@@ -71,7 +73,12 @@ public class Mint extends DataContract {
             dataSet("mining/" + domain + "/difficulty", "" + difficulty);
             dataSet("mining" + domain + "/last_hash", newHash);
 
-            //broadcast("mining", new BroadcastData(domain, difficulty, lastHash, reward, gasAddress));
+            broadcast("mining", map(
+                    "domain", domain,
+                    "difficulty", difficulty,
+                    "lastHash", lastHash,
+                    "reward", reward,
+                    "gas_address", gasAddress));
             response.put("minted", reward);
         } else {
             error("Invalid nonce");

@@ -1,4 +1,4 @@
-package com.sockets.test;
+package com.sockets.test.utils;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -31,7 +31,7 @@ public class InfiniteTimer {
             public void run() {
                 if (System.currentTimeMillis() - lastRestart < skipCallsAfterMs) {
                     System.out.println("call: " + path + " - " + System.currentTimeMillis());
-                    Backend.postToLocalhost(path);
+                    Request.post(path);
                 }
             }
         }, 0, interval);

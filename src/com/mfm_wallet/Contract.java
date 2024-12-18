@@ -13,6 +13,13 @@ public abstract class Contract extends TokenRequests {
     public String scriptPath;
     public Map<String, String> params = new HashMap<>();
 
+    public Contract run(String scriptPath, Map<String, String> params) {
+        this.scriptPath = scriptPath;
+        this.params = params;
+        run();
+        return this;
+    }
+
     public String getString(String key, String defaultValue) {
         return params.getOrDefault(key, defaultValue);
     }

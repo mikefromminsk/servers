@@ -1,9 +1,8 @@
 package com.sockets.test;
 
+import com.sockets.test.utils.SSLContextBuilder;
 import com.sockets.test.utils.StringUtils;
 import com.sun.net.httpserver.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -13,11 +12,11 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 
 
-public class SimpleHttpsRedirector {
+public class TelegramRedirector {
 
     private int port;
 
-    public SimpleHttpsRedirector(int port) {
+    public TelegramRedirector(int port) {
         this.port = port;
     }
 
