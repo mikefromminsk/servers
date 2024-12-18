@@ -1,12 +1,12 @@
 package com.mfm_wallet;
 
-import com.mfm_wallet.mfm_token.TokenRequests;
+import com.mfm_wallet.mfm_token.TokenUtils;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class Contract extends TokenRequests {
+public abstract class Contract extends TokenUtils {
     protected Map<String, Object> response = new LinkedHashMap<>();
     protected abstract void run();
 

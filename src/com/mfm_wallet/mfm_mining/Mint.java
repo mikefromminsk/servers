@@ -75,9 +75,9 @@ public class Mint extends DataContract {
 
             broadcast("mining", map(
                     "domain", domain,
-                    "difficulty", difficulty,
+                    "difficulty", "" + difficulty,
                     "lastHash", lastHash,
-                    "reward", reward,
+                    "reward", "" + reward,
                     "gas_address", gasAddress));
             response.put("minted", reward);
         } else {

@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import static com.mfm_wallet.mfm_mining.Miner.hashMod;
+
 public class Utils {
 
     public static Random random = new Random();
@@ -63,8 +65,6 @@ public class Utils {
     }
 
     public static int getPortOffset(String domain) {
-        String hash = MD5.hash(domain);
-        BigInteger big = new BigInteger(hash, 16);
-        return big.mod(BigInteger.valueOf(16)).intValue();
+        return Math.toIntExact(hashMod(domain, 16L));
     }
 }

@@ -20,7 +20,6 @@ import org.java_websocket.WebSocket;
 import javax.net.ssl.SSLContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URI;
 import java.util.*;
 
 import static com.mfm_wallet.Utils.*;
@@ -31,7 +30,6 @@ import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 public class Node extends NanoHTTPD {
     static final String MIME_JSON = "application/json";
     static final int HTTPS_START_RANGE = 8000;
-    static final int WSS_START_RANGE = 8800;
 
     static String masterNode;
     static WssServer wssServer;
@@ -58,6 +56,9 @@ public class Node extends NanoHTTPD {
                 send.commit();
                 System.out.println("Node loaded");
             } catch (Exception e) {
+                Init init = new Init();
+                init.run(null, map("admin_password", "pass"));
+                init.commit();
             }
         } else {
             int masterPortOffset = getPortOffset(masterNode);
@@ -73,7 +74,7 @@ public class Node extends NanoHTTPD {
                 System.out.println("Node synced with " + masterNode);
             });
         }
-        wssServer = new WssServer(WSS_START_RANGE + getPortOffset(domain), domain);
+        wssServer = new WssServer(domain);
     }
 
     public void start() {

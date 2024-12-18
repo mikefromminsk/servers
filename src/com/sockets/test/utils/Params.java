@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Params {
 
-    public static Map<String, String> map(Object... params) {
+    public static Map<String, String> map(String... params) {
         Map<String, String> paramMap = new HashMap<>();
         if (params.length % 2 != 0) {
             throw new IllegalArgumentException("Invalid number of parameters. Parameters should be in key-value pairs.");
@@ -14,7 +14,7 @@ public class Params {
             if (!(params[i] instanceof String)) {
                 throw new IllegalArgumentException("Keys should be of type String.");
             }
-            paramMap.put((String) params[i], params[i + 1].toString());
+            paramMap.put(params[i], params[i + 1]);
         }
         return paramMap;
     }

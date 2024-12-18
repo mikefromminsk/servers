@@ -1,10 +1,10 @@
 package com.mfm_wallet.mfm_data;
 
-import com.mfm_wallet.Contract;
+import com.mfm_wallet.mfm_token.TokenRequests;
 
 import java.util.*;
 
-public abstract class DataContract extends Contract {
+public abstract class DataContract extends TokenRequests {
     public static final int MAX_VALUE_SIZE = 256;
     public static final String GAS_DOMAIN = "usdt";
     public static final String GAS_OWNER = "admin";
@@ -85,7 +85,7 @@ public abstract class DataContract extends Contract {
 
     public void commit() {
         Double gas_commission = 0.01 * data.size();
-        if (gas_commission > 0){
+        if (gas_commission > 0) {
             String gas_address = getRequired("gas_address");
             String gas_pass = getRequired("gas_pass");
             if (tokenBalance(GAS_DOMAIN, gas_address) < gas_commission) error("Not enough gas");

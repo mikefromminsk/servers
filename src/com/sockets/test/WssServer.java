@@ -21,16 +21,17 @@ import static com.mfm_wallet.Utils.getPortOffset;
 
 
 public class WssServer extends WebSocketServer {
+    static final int WSS_START_RANGE = 8800;
 
     int connections = 0;
     static final Gson json = new Gson();
     public static final Map<String, HashSet<WebSocket>> channels = new HashMap<>();
 
-    public WssServer(int port, String site_domain) {
-        super(new InetSocketAddress(port + getPortOffset(site_domain)));
+    public WssServer(String site_domain) {
+        super(new InetSocketAddress(WSS_START_RANGE + getPortOffset(site_domain)));
         SSLContext context = SSLContextBuilder.from(site_domain);
         if (context != null) {
-            System.out.println("WSS context activated for " + site_domain + " on port " + port);
+            System.out.println("WSS context activated for " + site_domain + " on port " + getPort());
             setWebSocketFactory(new DefaultSSLWebSocketServerFactory(context));
         }
     }

@@ -1,6 +1,7 @@
 package com.mfm_wallet.mfm_exchange;
 
 import com.mfm_wallet.Contract;
+import com.mfm_wallet.mfm_token.TokenRequests;
 import com.mfm_wallet.model.Token;
 
 import java.util.*;
@@ -9,7 +10,7 @@ import static com.mfm_wallet.Node.broadcast;
 import static com.mfm_wallet.mfm_data.DataContract.GAS_DOMAIN;
 import static com.sockets.test.utils.Params.map;
 
-abstract class ExchangeUtils extends Contract {
+public abstract class ExchangeUtils extends TokenRequests {
 
     private static final Map<Long, Order> allOrders = new HashMap<>();
     private final Map<Long, Order> orders = new HashMap<>();
@@ -146,7 +147,7 @@ abstract class ExchangeUtils extends Contract {
                 trackLinear(domain + "_price", price);
                 broadcast("price", map(
                         "domain", domain,
-                        "price", price
+                        "price", "" + price
                 ));
             }
             Token token = tokensByDomain.get(domain);
@@ -219,12 +220,6 @@ abstract class ExchangeUtils extends Contract {
         }
         levels.sort((o1, o2) -> isSell == 1 ? Double.compare(o1.price, o2.price) : Double.compare(o2.price, o1.price));
         return levels.size() > count ? levels.subList(0, count) : levels;
-    }
-
-    public boolean botScriptReg(String domain, String botAddress) {
-        String placeScript = "mfm-exchange/place.php";
-        tokenRegScript(domain, botAddress, placeScript);
-        return tokenRegScript(GAS_DOMAIN, botAddress, placeScript);
     }
 
     public void commit() {

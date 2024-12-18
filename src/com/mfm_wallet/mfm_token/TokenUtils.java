@@ -1,19 +1,17 @@
 package com.mfm_wallet.mfm_token;
 
 import com.mfm_wallet.mfm_analytics.AnalyticsUtils;
-import com.mfm_wallet.model.Account;
 import com.mfm_wallet.model.Token;
 import com.mfm_wallet.model.Transaction;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
+import com.mfm_wallet.model.Account;
 
 import static com.mfm_wallet.Node.broadcast;
 
 public class TokenUtils extends AnalyticsUtils {
-    static final String GENESIS_ADDRESS = "owner";
+    public static final String GENESIS_ADDRESS = "owner";
 
     public static final List<Transaction> transHistory = new ArrayList<>();
     public static Long transHistorySaveTime = 0L;
@@ -30,7 +28,30 @@ public class TokenUtils extends AnalyticsUtils {
     List<Transaction> transactionsNew = new ArrayList<>();
     List<Token> tokensNew = new ArrayList<>();
 
-    public void setTran(Transaction tran) {
+    static String tokenKey(String domain, String address, String password, String prevKey) {
+        return md5(domain + address + password + (prevKey == null ? "" : prevKey));
+    }
+
+    public static String tokenNextHash(String domain, String address, String password, String prevKey) {
+        return md5(tokenKey(domain, address, password, prevKey));
+    }
+
+    public String tokenPass(String domain, String address, String password){
+        Account account = allAccounts.get(domain + address);
+        String key = tokenKey(domain, address, password, account == null ? "" : account.prev_key);
+        String nextHash = tokenNextHash(domain, address, password, key);
+        return key + ":" + nextHash;
+    }
+
+    public String tokenPass(String domain, String address){
+        return tokenPass(domain, address, address);
+    }
+
+    public double tokenPrice(String domain) {
+        return getCandleLastValue(domain + "_price");
+    }
+
+    private void setTran(Transaction tran) {
         transactionsNew.add(tran);
     }
 
@@ -38,7 +59,7 @@ public class TokenUtils extends AnalyticsUtils {
         tokensNew.add(token);
     }
 
-    public void setAccount(Account account) {
+    private void setAccount(Account account) {
         accountsNew.put(account.domain + account.address, account);
     }
 

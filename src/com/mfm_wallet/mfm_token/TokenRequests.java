@@ -1,76 +1,50 @@
 package com.mfm_wallet.mfm_token;
 
+import com.mfm_wallet.Contract;
 import com.mfm_wallet.model.Account;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
-public class TokenRequests extends TokenUtils {
+import static com.mfm_wallet.mfm_data.DataContract.GAS_DOMAIN;
+import static com.sockets.test.utils.Params.map;
 
-    static String tokenKey(String domain, String address, String password, String prevKey) {
-        return md5(domain + address + password + prevKey);
-    }
-
-    static String tokenNextHash(String domain, String address, String password, String prevKey) {
-        return md5(tokenKey(domain, address, password, prevKey));
-    }
-
-    public String tokenPass(String domain, String address){
-        return tokenPass(domain, address, address);
-    }
-
-    public String tokenPass(String domain, String address, String password){
-        Account account = getAccount(domain, address);
-        String key = tokenKey(domain, address, password, account.prev_key);
-        String nextHash = tokenNextHash(domain, address, password, key);
-        return key + ":" + nextHash;
-    }
+public abstract class TokenRequests extends Contract {
 
     public boolean tokenRegScript(String domain, String address, String script) {
         if (getAccount(domain, address) == null) {
-            Account account = new Account();
-            account.domain = domain;
-            account.address = address;
-            account.next_hash = tokenNextHash(domain, address, domain, null);
-            account.balance = 0.0;
-            account.delegate = script;
-            setAccount(account);
+            tokenSendAndCommit(domain, GENESIS_ADDRESS, address, 0L, tokenPass(domain, address), script);
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
-    public double tokenPrice(String domain) {
-        return getCandleLastValue(domain + "_price");
-    }
-/*
-    static boolean tokenSendAndCommit(String domain, String from, String to, double amount, String password), SQLException {
-        Account account = getAccount(domain, from);
-        if (account != null) {
-            String key = tokenKey(domain, from, password, (String) account.get("prev_key"));
-            String nextHash = tokenNextHash(domain, from, password, key);
-            return requestEquals("/mfm-token/send.php", map(
-                    "domain", domain,
-                    "from_address", from,
-                    "to_address", to,
-                    "amount", String.valueOf(amount),
-                    "pass", key + ":" + nextHash
-            ));
-        } else {
-            return false;
-        }
+    public void tokenRegToken(String domain, String address, String password, Long amount) {
+        tokenSendAndCommit(domain, GENESIS_ADDRESS, address, amount, ":" + tokenNextHash(domain, address, password, ""), null);
     }
 
-    public static boolean tokenRegAccount(String domain, String address, String password, double amount), SQLException {
-        return requestEquals("/mfm-token/send.php", map(
+    public void tokenRegAccount(String domain, String address, String password) {
+        tokenSendAndCommit(domain, GENESIS_ADDRESS, address, 0L, tokenPass(domain, address, password), null);
+    }
+
+    public void tokenSendAndCommit(String domain, String from, String to, double amount, String pass, String delegate) {
+        new Send().run("mfm-token/send.php", map(
                 "domain", domain,
-                "from_address", GENESIS_ADDRESS,
-                "to_address", address,
-                "amount", String.valueOf(amount),
-                "pass", ":" + tokenNextHash(domain, address, password)
-        ));
+                "from_address", from,
+                "to_address", to,
+                "pass", pass,
+                "amount", "" + amount,
+                "delegate", delegate
+        )).commit();
     }
+
+    public boolean botScriptReg(String domain, String botAddress) {
+        String placeScript = "mfm-exchange/place.php";
+        tokenRegScript(domain, botAddress, placeScript);
+        return tokenRegScript(GAS_DOMAIN, botAddress, placeScript);
+    }
+
+/*
 
 
     public static boolean tokenDelegate(String domain, String address, String pass, String script) throws SQLException {
