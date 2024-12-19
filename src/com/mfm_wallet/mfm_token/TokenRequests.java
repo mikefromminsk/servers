@@ -24,7 +24,7 @@ public abstract class TokenRequests extends Contract {
     }
 
     public void tokenRegAccount(String domain, String address, String password) {
-        tokenSendAndCommit(domain, GENESIS_ADDRESS, address, 0L, tokenPass(domain, address, password), null);
+        tokenRegToken(domain, address, password, 0L);
     }
 
     public void tokenSendAndCommit(String domain, String from, String to, double amount, String pass, String delegate) {

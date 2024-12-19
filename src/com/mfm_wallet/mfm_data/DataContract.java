@@ -12,38 +12,58 @@ public abstract class DataContract extends TokenRequests {
     private static final Random random = new Random();
     private static Map<Integer, Map<String, DataRow>> allData = new HashMap<>();
     private Map<Integer, Map<String, DataRow>> data = new HashMap<>();
-    private Map<Integer, List<DataRow>> history = new HashMap<>();
+    private static final Map<Integer, List<DataRow>> history = new HashMap<>();
 
     public class DataRow {
         public int id;
+        public String key;
         public String value;
         public long time;
 
-        public DataRow(int currentId, String key) {
-            this.id = currentId;
-            this.value = key;
-            time = System.currentTimeMillis();
+        public DataRow(int id, String key, String value) {
+            this.id = id;
+            this.key = key;
+            this.value = value;
+            time = time();
+        }
+
+        public DataRow clone() {
+            return new DataRow(id, key, value);
         }
     }
 
     public DataRow dataFindPath(String path, boolean create) {
         int currentId = 0;
+        int parentId = 0;
         DataRow current = null;
+        boolean fromDB = false;
         for (String key : path.split("/")) {
             current = allData.getOrDefault(currentId, new HashMap<>()).get(key);
-            if (current == null && create) {
-                current = new DataRow(currentId, key);
-                data.computeIfAbsent(random.nextInt(), k -> new HashMap<>()).put(key, current);
-            } else {
-                return null;
+            fromDB = true;
+            if (current == null) {
+                if (create) {
+                    fromDB = false;
+                    current = new DataRow(random.nextInt(), key, null);
+                    data.computeIfAbsent(currentId, k -> new HashMap<>()).put(key, current);
+                } else {
+                    return null;
+                }
             }
+            parentId = currentId;
+            currentId = current.id;
+        }
+        if (current != null && fromDB) {
+            current = current.clone();
+            if (create)
+                data.computeIfAbsent(parentId, k -> new HashMap<>()).put(current.key, current);
         }
         return current;
     }
 
     public void dataSet(String path, String value) {
         if (value.length() > MAX_VALUE_SIZE) error("Value too long");
-        dataFindPath(path, true).value = value;
+        DataRow row = dataFindPath(path, true);
+        row.value = value;
     }
 
     public String dataGet(String path) {
@@ -65,7 +85,8 @@ public abstract class DataContract extends TokenRequests {
         List<String> response = new ArrayList<>();
         DataRow row = dataFindPath(path, false);
         if (row != null) {
-            for (DataRow item : history.get(row.id)) {
+            List<DataRow> pathHistory = history.get(row.id);
+            for (DataRow item : pathHistory) {
                 response.add(item.value);
                 if (response.size() >= size) break;
             }
@@ -91,7 +112,14 @@ public abstract class DataContract extends TokenRequests {
             if (tokenBalance(GAS_DOMAIN, gas_address) < gas_commission) error("Not enough gas");
             tokenSend(scriptPath, GAS_DOMAIN, gas_address, GAS_OWNER, gas_commission, gas_pass, null);
         }
-        allData.putAll(data);
+        for (Integer parentId: data.keySet()) {
+            Map<String, DataRow> node = data.get(parentId);
+            for (String key : node.keySet()) {
+                DataRow row = node.get(key);
+                allData.computeIfAbsent(parentId, k -> new HashMap<>()).put(key, row);
+                history.computeIfAbsent(row.id, k -> new ArrayList<>()).add(row);
+            }
+        }
         data.clear();
         super.commit();
     }

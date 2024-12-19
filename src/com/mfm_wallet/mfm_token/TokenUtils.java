@@ -1,11 +1,13 @@
 package com.mfm_wallet.mfm_token;
 
+import com.google.gson.reflect.TypeToken;
 import com.mfm_wallet.mfm_analytics.AnalyticsUtils;
 import com.mfm_wallet.model.Token;
 import com.mfm_wallet.model.Transaction;
 
 import java.io.IOException;
 import java.util.*;
+
 import com.mfm_wallet.model.Account;
 
 import static com.mfm_wallet.Node.broadcast;
@@ -36,14 +38,14 @@ public class TokenUtils extends AnalyticsUtils {
         return md5(tokenKey(domain, address, password, prevKey));
     }
 
-    public String tokenPass(String domain, String address, String password){
+    public String tokenPass(String domain, String address, String password) {
         Account account = allAccounts.get(domain + address);
         String key = tokenKey(domain, address, password, account == null ? "" : account.prev_key);
         String nextHash = tokenNextHash(domain, address, password, key);
         return key + ":" + nextHash;
     }
 
-    public String tokenPass(String domain, String address){
+    public String tokenPass(String domain, String address) {
         return tokenPass(domain, address, address);
     }
 
@@ -105,13 +107,15 @@ public class TokenUtils extends AnalyticsUtils {
                     transByUser.put(tran.from, new ArrayList<>());
                 transByUser.get(tran.from).add(tran.next_hash);
                 if (transHistorySaveTime != 0) {
-                    broadcast("transactions", tran);
+                    Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
+                    }.getType());
+                    broadcast("transactions", map);
                 }
                 trackAccumulate(tran.domain + "_trans");
             }
             trackAccumulate("trans_count", transactionsNew.size());
             if (time() > transHistorySaveTime + 60) {
-                 if (transHistorySaveTime != 0) {
+                if (transHistorySaveTime != 0) {
                     new Thread(() -> {
                         try {
                             writeFile("trans.json", transHistory);

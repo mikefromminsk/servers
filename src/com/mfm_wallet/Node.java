@@ -5,6 +5,7 @@ import com.mfm_wallet.mfm_analytics.Events;
 import com.mfm_wallet.mfm_analytics.Funnel;
 import com.mfm_wallet.mfm_analytics.Track;
 import com.mfm_wallet.mfm_exchange.*;
+import com.mfm_wallet.mfm_mining.Info;
 import com.mfm_wallet.mfm_mining.Miner;
 import com.mfm_wallet.mfm_mining.Mint;
 import com.mfm_wallet.mfm_token.*;
@@ -119,6 +120,8 @@ public class Node extends NanoHTTPD {
                 return new Mint();
             case "mfm-mining/miner.php":
                 return new Miner();
+            case "mfm-mining/info.php":
+                return new Info();
             case "mfm-exchange/place.php":
                 return new Place();
             case "mfm-exchange/cancel.php":
@@ -164,7 +167,9 @@ public class Node extends NanoHTTPD {
             stack.removeLast();
             error.put("stack", stack);
             System.out.println("error: " + scriptPath);
-            return newFixedLengthResponse(INTERNAL_ERROR, MIME_JSON, gson.toJson(error));
+            Response response = newFixedLengthResponse(INTERNAL_ERROR, MIME_JSON, gson.toJson(error));
+            response.addHeader("Access-Control-Allow-Origin", "*");
+            return response;
         }
         contract.response.put("success", "true");
         System.out.println("success: " + scriptPath + " took " + (time() - start) + "ms");
@@ -173,7 +178,7 @@ public class Node extends NanoHTTPD {
         return response;
     }
 
-    public static void broadcast(String channel, Object data) {
+    public static void broadcast(String channel, Map<String, String> data) {
         if (wssServer.channels.containsKey(channel)) {
             Iterator<WebSocket> iterator = wssServer.channels.get(channel).iterator();
             Set<WebSocket> activeSubscribers = new HashSet<>();

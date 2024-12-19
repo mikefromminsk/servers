@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
+import java.util.StringJoiner;
 
 public class Request {
     public static Gson json = new Gson();
@@ -13,18 +15,18 @@ public class Request {
     }
 
     public static void post(String redirectUrl,
-                            Object data) {
-        post(redirectUrl, data, null, null);
+                            Map<String, String> params) {
+        post(redirectUrl, params, null, null);
     }
 
     public static void post(String redirectUrl,
-                            Object data,
+                            Map<String, String> params,
                             Success success) {
-        post(redirectUrl, data, success, null);
+        post(redirectUrl, params, success, null);
     }
 
     public static void post(String redirectUrl,
-                            Object data,
+                            Map<String, String> params,
                             Success success,
                             Success error) {
         try {
@@ -32,15 +34,24 @@ public class Request {
                 return;
             }
             if (!redirectUrl.contains("://")) {
-                redirectUrl = "http://localhost" + redirectUrl;
+                if (redirectUrl.contains("localhost")) {
+                    redirectUrl = "http://" + redirectUrl;
+                } else {
+                    redirectUrl = "http://localhost" + redirectUrl;
+                }
             }
-            byte[] byteData = new byte[0];
-            if (data != null)
-                byteData = json.toJson(data).getBytes();
+
+            StringJoiner paramsStr = new StringJoiner("&");
+            for (String key : params.keySet()) {
+                String value = params.get(key);
+                paramsStr.add(key + "=" + value);
+            }
+            byte[] byteData = paramsStr.toString().getBytes("UTF-8");
+
             URL url = new URL(redirectUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             conn.setRequestProperty("Content-Length", "" + byteData.length);
             conn.setDoOutput(true);
             conn.getOutputStream().write(byteData, 0, byteData.length);

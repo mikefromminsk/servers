@@ -1,13 +1,9 @@
 package com.sockets.test.benchmark;
 
-import com.sockets.test.utils.Wallet;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MaxHashCalc {

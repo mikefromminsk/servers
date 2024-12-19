@@ -13,8 +13,8 @@ public class Token extends Contract {
         response.put("token", token);
         if (address != null) {
             Account account = getAccount(domain, address);
-            if (account == null) error("Account not found");
-            response.put("account", account);
+            if (account != null)
+                response.put("account", account);
         }
     }
 }

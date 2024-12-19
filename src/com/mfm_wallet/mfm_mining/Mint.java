@@ -10,10 +10,7 @@ import static com.sockets.test.utils.Params.map;
 
 public class Mint extends DataContract {
 
-    Double getReward(String domain) {
-        Double token_balance = tokenBalance(domain, "mining");
-        return round(token_balance * 0.001, 2);
-    }
+    public static double REWARD_MULTIPLIER = 0.0001;
 
     @Override
     protected void run() {
@@ -39,25 +36,26 @@ public class Mint extends DataContract {
         hashNumber = hashNumber.mod(BigInteger.valueOf(difficulty));
 
         if (hashNumber.equals(BigInteger.ZERO)) {
-            double reward = getReward(domain);
+            double reward = round(tokenBalance(domain, "mining") * REWARD_MULTIPLIER, 2);
             tokenSend(scriptPath, domain, "mining", gasAddress, reward, tokenPass(domain, "mining", "mining"), null);
-            long interval = time() - dataFindPath("mining/" + domain + "/last_hash", true).time;
+            DataRow lastHashRow = dataFindPath("mining/" + domain + "/last_hash", false);
+            long interval = time() - (lastHashRow == null ? 0 : lastHashRow.time);
             int needInterval = 60;
             long timeDiff = interval - needInterval;
 
             int axelerate = 0;
             List<Long> difficultyHistory = getHistoryLong("mining/" + domain + "/difficulty", 20);
-            for (int i = 1; i < difficultyHistory.size(); i++) {
-                if (difficultyHistory.get(i) > difficultyHistory.get(i - 1))
+            for (int i = 0; i < difficultyHistory.size() - 1; i++) {
+                if (difficultyHistory.get(i) > difficultyHistory.get(i + 1))
                     axelerate += 1;
-                if (difficultyHistory.get(i) < difficultyHistory.get(i - 1))
+                if (difficultyHistory.get(i) < difficultyHistory.get(i + 1))
                     axelerate -= 1;
             }
-            if (timeDiff > 0) {
+            /*if (timeDiff > 0) {
                 axelerate += 1;
             } else if (timeDiff < 0) {
                 axelerate -= 1;
-            }
+            }*/
 
             int difficultyDiff = (int) Math.pow(2, Math.abs(axelerate));
 
@@ -71,7 +69,7 @@ public class Mint extends DataContract {
                 difficulty = 1L;
             }
             dataSet("mining/" + domain + "/difficulty", "" + difficulty);
-            dataSet("mining" + domain + "/last_hash", newHash);
+            dataSet("mining/" + domain + "/last_hash", newHash);
 
             broadcast("mining", map(
                     "domain", domain,

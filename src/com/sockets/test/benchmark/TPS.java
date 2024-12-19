@@ -1,11 +1,12 @@
 package com.sockets.test.benchmark;
 
 import com.sockets.test.utils.Success;
-import com.sockets.test.utils.Wallet;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.mfm_wallet.Utils.time;
 
 public class TPS {
     public static Map<String, String> generateAccounts(int numberOfAccounts) {
@@ -25,7 +26,7 @@ public class TPS {
             String password = accounts.get(address);
             executor.submit(() -> {
                 while (true) {
-                    Wallet.send(address, password, "usdt", address, "0", success, error);
+                    Wallet.send("localhost:8011", address, password, "usdt", address, "0", success, error);
                 }
             });
         }
@@ -36,12 +37,12 @@ public class TPS {
     static Long start = 0L;
 
     public static void main(String[] args) throws InterruptedException {
-        start = System.currentTimeMillis();
+        start = time();
         TPS.startSendingRequests(TPS.generateAccounts(20),
                 response -> {
                     success = success + 1;
                     System.out.println("TPS success " + success + " error " + error
-                            + " avg " + ((System.currentTimeMillis() - start) / (success + error)));
+                            + " avg " + (success + error) / (time() - start));
                 }, response -> {
                     System.out.println("TPS error " + ++error + " success "  + success);
                 });

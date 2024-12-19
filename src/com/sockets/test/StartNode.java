@@ -4,6 +4,6 @@ import com.mfm_wallet.Node;
 
 public class StartNode {
     public static void main(String[] args) {
-        new Node("hatosh.com", null).start();
+        new Node("localhost", null).start();
     }
 }
