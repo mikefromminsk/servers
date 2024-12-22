@@ -18,11 +18,11 @@ public abstract class TokenUtils extends AnalyticsUtils {
 
     public static final List<Transaction> transHistory = new ArrayList<>();
     public static Long transHistorySaveTime = 0L;
-    public static final Map<String, List<String>> userDomains = new LinkedHashMap<>();
-    public static final Map<String, Account> allAccounts = new LinkedHashMap<>();
-    public static final Map<String, List<String>> transByUser = new LinkedHashMap<>();
-    public static final Map<String, Transaction> transByHash = new LinkedHashMap<>();
-    public static final Map<String, Token> tokensByDomain = new LinkedHashMap<>();
+    public static final Map<String, List<String>> userDomains = new HashMap<>();
+    public static final Map<String, Account> allAccounts = new HashMap<>();
+    public static final Map<String, List<String>> transByUser = new HashMap<>();
+    public static final Map<String, Transaction> transByHash = new HashMap<>();
+    public static final Map<String, Token> tokensByDomain = new HashMap<>();
 
     public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
     public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
