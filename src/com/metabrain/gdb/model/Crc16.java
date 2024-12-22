@@ -1,42 +1,8 @@
-package com.metabrain.gdb.tree;
-
-import com.metabrain.gdb.Bytes;
+package com.metabrain.gdb.model;
 
 public class Crc16 {
 
-    public static byte[] hashToBytes(int hash){
-        String hashStr = Integer.toHexString(hash);
-        // TODO bug with Tree.java - letters in hash
-        hashStr = hashStr.replace('a', '0');
-        hashStr = hashStr.replace('b', '0');
-        hashStr = hashStr.replace('c', '0');
-        hashStr = hashStr.replace('d', '0');
-        hashStr = hashStr.replace('e', '0');
-        hashStr = hashStr.replace('f', '0');
-        // TODO issue when toHexString return 3 letters
-        if (hashStr.length() != 4){
-            hashStr = ("0000" + hashStr).substring(hashStr.length());
-        }
-        return Bytes.fromString(hashStr);
-    }
-
-    public static byte[] getHashBytes(String str) {
-        return getHashBytes(str.getBytes());
-    }
-
-    public static byte[] getHashBytes(byte[] data) {
-        return hashToBytes(getHash(0, data));
-    }
-
-    public static int getHash(String str) {
-        return getHash(0, str.getBytes());
-    }
-
-    public static int getHash(byte[] bytes) {
-        return getHash(0, bytes);
-    }
-
-    public static int getHash(int hash, byte[] bytes) {
+    public static int hash(String str) {
         int[] table = {
                 0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
                 0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
@@ -71,8 +37,8 @@ public class Crc16 {
                 0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
                 0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040,
         };
-
-        for (byte b : bytes)
+        int hash = 0;
+        for (byte b : str.getBytes())
             hash = (hash >>> 8) ^ table[(hash ^ b) & 0xff];
         return hash;
     }

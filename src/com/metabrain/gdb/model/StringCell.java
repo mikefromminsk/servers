@@ -1,7 +1,7 @@
-package com.metabrain.gdb;
+package com.metabrain.gdb.model;
 
 
-public class StringCell implements InfinityConstArrayCell {
+public class StringCell implements BigConstArrayCell {
 
     public String str;
 

@@ -1,4 +1,4 @@
-package com.metabrain.gdb;
+package com.metabrain.gdb.utils;
 
 import java.io.*;
 import java.net.URLDecoder;

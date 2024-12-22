@@ -1,8 +1,13 @@
-package com.metabrain.gdb;
+package com.metabrain.gdb.model;
 
-public class LongCell implements InfinityConstArrayCell {
+import com.metabrain.gdb.utils.Bytes;
 
-    long value = 0;
+public class LongCell implements BigConstArrayCell {
+    public long value;
+
+    public LongCell(long value) {
+        this.value = value;
+    }
 
     @Override
     public void parse(byte[] data) {

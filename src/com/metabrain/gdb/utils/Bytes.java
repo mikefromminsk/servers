@@ -1,4 +1,4 @@
-package com.metabrain.gdb;
+package com.metabrain.gdb.utils;
 
 import java.nio.*;
 import java.nio.charset.Charset;
@@ -15,7 +15,11 @@ public class Bytes {
     }
 
     public static byte[] fromLong(long value) {
-        return ByteBuffer.allocate(8).putLong(value).array();
+        return ByteBuffer.allocate(Long.BYTES).putLong(value).array();
+    }
+
+    public static byte[] fromDouble(double value) {
+        return ByteBuffer.allocate(Double.BYTES).putDouble(value).array();
     }
 
     public static long toLong(byte[] bytes) {
@@ -69,12 +73,8 @@ public class Bytes {
         return byteBuffer.array();
     }
 
-    public static byte[] fromString(String mask) {
-        return mask.getBytes();
-    }
-
     public static String toString(byte[] bytes) {
-        return new String(bytes);
+        return new String(bytes).trim();
     }
 
     public static byte[] concat(byte[] a, byte[] b) {
@@ -84,7 +84,7 @@ public class Bytes {
         return c;
     }
 
-    public static byte[] fromCharArray(char[]  chars) {
+    public static byte[] fromCharArray(char[] chars) {
         return Charset.forName("UTF-8").encode(CharBuffer.wrap(chars)).array();
     }
 
@@ -98,5 +98,35 @@ public class Bytes {
         System.arraycopy(a, 0, result, 0, a.length);
         System.arraycopy(b, 0, result, a.length, b.length);
         return result;
+    }
+
+    public static byte[] fromString(String mask) {
+        return mask.getBytes();
+    }
+
+    public static byte[] fromString(String string, int minSize) {
+        if (string == null) string = "";
+        byte[] bytes = new byte[minSize];
+        byte[] stringBytes = string.getBytes();
+        System.arraycopy(stringBytes, 0, bytes, 0, stringBytes.length);
+        return bytes;
+    }
+    public static String toString(byte[] data, int offset, int size) {
+        int firstZeroIndex = 0;
+        for (int i = 0; i < size; i++) {
+            if (data[offset + i] == 0) {
+                firstZeroIndex = i;
+                break;
+            }
+        }
+        return new String(data, offset, offset + firstZeroIndex);
+    }
+
+    public static Double toDouble(byte[] data, int offset) {
+        return ByteBuffer.wrap(data, offset, Double.BYTES).getDouble();
+    }
+
+    public static Long toLong(byte[] data, int offset) {
+        return ByteBuffer.wrap(data, offset, Long.BYTES).getLong();
     }
 }

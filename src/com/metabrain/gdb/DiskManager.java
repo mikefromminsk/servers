@@ -1,9 +1,10 @@
 package com.metabrain.gdb;
 
+import com.metabrain.gdb.utils.IniFile;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Random;
 
 public class DiskManager {
 

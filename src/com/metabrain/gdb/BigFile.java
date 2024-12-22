@@ -1,5 +1,7 @@
 package com.metabrain.gdb;
 
+import com.metabrain.gdb.utils.Bytes;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -7,16 +9,16 @@ import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
-public class InfinityFile {
+public class BigFile {
 
     public final static String INFINITY_FILE_PART_PREFIX = "part";
     public long partSize;
     String infinityFileID;
-    public InfinityFileData fileData;
+    public BigFileData fileData;
     ActionThread mainThread;
-    public static Map<String, InfinityFileData> infinityFileCache = new HashMap<>();
+    public static Map<String, BigFileData> infinityFileCache = new HashMap<>();
 
-    public InfinityFile(String infinityFileID) {
+    public BigFile(String infinityFileID) {
         this.infinityFileID = infinityFileID;
         DiskManager diskManager = DiskManager.getInstance();
         this.mainThread = diskManager.mainThread;
@@ -24,7 +26,7 @@ public class InfinityFile {
 
         fileData = infinityFileCache.get(infinityFileID);
         if (fileData == null) {
-            fileData = new InfinityFileData();
+            fileData = new BigFileData();
             Map<String, String> fileSettings = diskManager.properties.getSection(infinityFileID);
             if (fileSettings != null)
                 for (int i = 0; fileSettings.containsKey(INFINITY_FILE_PART_PREFIX + i); i++) {

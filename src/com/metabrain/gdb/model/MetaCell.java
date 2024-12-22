@@ -1,6 +1,8 @@
-package com.metabrain.gdb;
+package com.metabrain.gdb.model;
 
-public class MetaCell implements InfinityConstArrayCell {
+import com.metabrain.gdb.utils.Bytes;
+
+public class MetaCell implements BigConstArrayCell {
 
     public long start;
     public long length;

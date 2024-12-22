@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.*;
 
 import com.hatosh.wallet.token.model.Account;
+import com.metabrain.gdb.BigArray;
+import com.metabrain.gdb.BigMap;
 
 import static com.hatosh.exchange.ExchangeServer.onTranSuccess;
 import static com.hatosh.wallet.Node.broadcast;
@@ -17,10 +19,10 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public static final String GENESIS_ADDRESS = "owner";
 
     public static Long transHistorySaveTime = 0L;
-    public static final List<Transaction> transHistory = new ArrayList<>();
+    public static final BigArray<Transaction> transHistory = new BigArray<>("transHistory");
+    public static final BigMap<Transaction> transByHash = new BigMap<>("transByHash");
     public static final Map<String, String> userDomains = new HashMap<>();
     public static final Map<String, Account> allAccounts = new HashMap<>();
-    public static final Map<String, Transaction> transByHash = new HashMap<>();
     public static final Map<String, Token> tokensByDomain = new HashMap<>();
 
     public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
@@ -73,7 +75,9 @@ public abstract class TokenUtils extends AnalyticsUtils {
     }
 
     protected Transaction getTran(String nextHash) {
-        return transByHash.get(nextHash);
+        Transaction transaction = new Transaction();
+        transByHash.get(nextHash, transaction);
+        return transaction;
     }
 
     public Account getAccount(String domain, String address) {
@@ -105,7 +109,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
                 tran.prev_hash = account.prev_hash;
                 account.prev_hash = tran.next_hash;
                 setAccount(account);
-                transByHash.put(tran.next_hash, tran);
+                //transByHash.put(tran.next_hash, tran);
                 transHistory.add(tran);
                 if (transHistorySaveTime != 0) {
                     Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
@@ -167,12 +171,13 @@ public abstract class TokenUtils extends AnalyticsUtils {
     protected List<Transaction> tokenTrans(String domain, String address, String toAddress) {
         List<Transaction> result = new ArrayList<>();
         Account account = getAccount(domain, address);
-        Transaction tran = transByHash.get(account.prev_hash);
+        Transaction tran = new Transaction();
+        transByHash.get(account.prev_hash, tran);
         int i = 0;
-        while (tran != null && i < 100) {
+        while (i < 100) {
             if (toAddress == null || (toAddress.equals(tran.to)))
                 result.add(tran);
-            tran = transByHash.get(tran.prev_hash);
+            transByHash.get(tran.prev_hash, tran);
             i++;
         }
         return result;
