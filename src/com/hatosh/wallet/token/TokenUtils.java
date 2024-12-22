@@ -16,11 +16,10 @@ import static com.hatosh.wallet.Node.broadcast;
 public abstract class TokenUtils extends AnalyticsUtils {
     public static final String GENESIS_ADDRESS = "owner";
 
-    public static final List<Transaction> transHistory = new ArrayList<>();
     public static Long transHistorySaveTime = 0L;
-    public static final Map<String, List<String>> userDomains = new HashMap<>();
+    public static final List<Transaction> transHistory = new ArrayList<>();
+    public static final Map<String, String> userDomains = new HashMap<>();
     public static final Map<String, Account> allAccounts = new HashMap<>();
-    public static final Map<String, List<String>> transByUser = new HashMap<>();
     public static final Map<String, Transaction> transByHash = new HashMap<>();
     public static final Map<String, Token> tokensByDomain = new HashMap<>();
 
@@ -87,10 +86,10 @@ public abstract class TokenUtils extends AnalyticsUtils {
         return account;
     }
 
-    public List<Account> getAccounts(String address) {
+    public List<Account> getSubAccounts(String address) {
         List<Account> result = new ArrayList<>();
         if (userDomains.containsKey(address)) {
-            for (String domain : userDomains.get(address)) {
+            for (String domain : userDomains.getOrDefault(address, "").split(",")) {
                 Account account = getAccount(domain, address);
                 if (account != null) result.add(account.clone());
             }
@@ -102,11 +101,12 @@ public abstract class TokenUtils extends AnalyticsUtils {
         if (transactionsNew != null) {
             Collections.reverse(transactionsNew);
             for (Transaction tran : transactionsNew) {
-                transHistory.add(tran);
+                Account account = getAccount(tran.domain, tran.from);
+                tran.prev_hash = account.prev_hash;
+                account.prev_hash = tran.next_hash;
+                setAccount(account);
                 transByHash.put(tran.next_hash, tran);
-                if (!transByUser.containsKey(tran.from))
-                    transByUser.put(tran.from, new ArrayList<>());
-                transByUser.get(tran.from).add(tran.next_hash);
+                transHistory.add(tran);
                 if (transHistorySaveTime != 0) {
                     Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
                     }.getType());
@@ -139,11 +139,10 @@ public abstract class TokenUtils extends AnalyticsUtils {
                 newAccountsCount++;
             allAccounts.put(account.domain + account.address, account);
 
-            if (!userDomains.containsKey(account.address))
-                userDomains.put(account.address, new ArrayList<>());
-            if (!userDomains.get(account.address).contains(account.domain))
-                userDomains.get(account.address).add(account.domain);
-
+            String userDomain = userDomains.getOrDefault(account.address, "");
+            if (!userDomain.contains(account.domain)) {
+                userDomains.put(account.address, userDomain + (userDomain.isEmpty() ? "" : ",") + account.domain);
+            }
             trackAccumulate(account.domain + "_accounts");
         }
         trackAccumulate("accounts_count", newAccountsCount);
@@ -165,18 +164,17 @@ public abstract class TokenUtils extends AnalyticsUtils {
         tokensNew.clear();
     }
 
-    protected List<Transaction> tokenTrans(String domain, String fromAddress, String toAddress) {
+    protected List<Transaction> tokenTrans(String domain, String address, String toAddress) {
         List<Transaction> result = new ArrayList<>();
-        if (transByUser.containsKey(fromAddress)) {
-            for (String nextHash : transByUser.get(fromAddress)) {
-                Transaction tran = transByHash.get(nextHash);
-                if (tran != null && tran.domain.equals(domain)) {
-                    if (toAddress == null || toAddress.equals(tran.to))
-                        result.add(tran);
-                }
-            }
+        Account account = getAccount(domain, address);
+        Transaction tran = transByHash.get(account.prev_hash);
+        int i = 0;
+        while (tran != null && i < 100) {
+            if (toAddress == null || (toAddress.equals(tran.to)))
+                result.add(tran);
+            tran = transByHash.get(tran.prev_hash);
+            i++;
         }
-        result.sort(Comparator.comparingLong(o -> o.time));
         return result;
     }
 

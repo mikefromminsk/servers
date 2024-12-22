@@ -8,6 +8,7 @@ public class Transaction {
     public Double fee;
     public String key;
     public String next_hash;
+    public String prev_hash;
     public String delegate;
     public Long time;
 
