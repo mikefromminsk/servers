@@ -45,7 +45,7 @@ public class Node extends HttpServer implements WssServer.Callback {
         }
         if (masterNode == null) {
             try {
-                if (TokenUtils.transHistory.fileData.sumFilesSize == 0) {
+                if (TokenUtils.transHistory.fileSize == 0) {
                     Init init = new Init();
                     init.run(null, map("admin_password", "pass"));
                     init.commit();

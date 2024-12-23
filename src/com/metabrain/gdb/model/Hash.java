@@ -2,14 +2,9 @@ package com.metabrain.gdb.model;
 
 import com.metabrain.gdb.utils.Bytes;
 
-public class Hash implements BigConstArrayCell {
+public class Hash implements BigArrayCell {
 
     public long[] links = new long[16];
-
-    @Override
-    public int getSize() {
-        return Long.BYTES * 16;
-    }
 
     @Override
     public byte[] build() {
@@ -17,7 +12,7 @@ public class Hash implements BigConstArrayCell {
     }
 
     @Override
-    public void parse(byte[] data) {
-        links = Bytes.toLongArray(data);
+    public void parse(Bytes data) {
+        links = data.readLongArray();
     }
 }

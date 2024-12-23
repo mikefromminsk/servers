@@ -1,8 +1,9 @@
 package com.metabrain.gdb;
 
-import com.metabrain.gdb.model.BigConstArrayCell;
+import com.metabrain.gdb.model.BigArrayCell;
+import com.metabrain.gdb.utils.Bytes;
 
-public class BigArray<Type extends BigConstArrayCell> extends BigFile {
+public class BigArray<Type extends BigArrayCell> extends BigFile {
 
     private final Class<Type> valClass;
 
@@ -21,20 +22,23 @@ public class BigArray<Type extends BigConstArrayCell> extends BigFile {
 
     public Type get(long index) {
         Type result = createValInstance();
-        byte[] readiedData = read(index * result.getSize(), result.getSize());
+        byte[] data = result.build();
+        byte[] readiedData = read(index * data.length, data.length);
         if (readiedData != null) {
-            result.parse(readiedData);
+            result.parse(new Bytes(readiedData));
             return result;
         }
         return null;
     }
 
     public void set(long index, Type obj) {
-        write(index * obj.getSize(), obj.build());
+        byte[] data = obj.build();
+        write(index * data.length, data);
     }
 
     public long add(Type obj) {
-        long lastMaxPosition = super.add(obj.build());
-        return lastMaxPosition / obj.getSize();
+        byte[] data = obj.build();
+        long lastMaxPosition = super.add(data);
+        return lastMaxPosition / data.length - 1;
     }
 }

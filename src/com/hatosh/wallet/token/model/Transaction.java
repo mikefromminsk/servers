@@ -1,12 +1,12 @@
 package com.hatosh.wallet.token.model;
 
-import com.metabrain.gdb.model.BigConstArrayCell;
+import com.metabrain.gdb.model.BigArrayCell;
 import com.metabrain.gdb.model.String32;
 import com.metabrain.gdb.utils.Bytes;
 
 import java.io.ByteArrayOutputStream;
 
-public class Transaction implements BigConstArrayCell {
+public class Transaction implements BigArrayCell {
     public String domain;
     public String from;
     public String to;
@@ -42,11 +42,6 @@ public class Transaction implements BigConstArrayCell {
     }
 
     @Override
-    public int getSize() {
-        return String32.BYTES * 3 + String32.BYTES + 2 * Double.BYTES + 2 * Long.BYTES;
-    }
-
-    @Override
     public byte[] build() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             bos.write(Bytes.fromString(domain, String32.BYTES));
@@ -66,15 +61,15 @@ public class Transaction implements BigConstArrayCell {
     }
 
     @Override
-    public void parse(byte[] data) {
-        domain = Bytes.toString(data, 0, String32.BYTES);
-        from = Bytes.toString(data, String32.BYTES, String32.BYTES);
-        to = Bytes.toString(data, 2 * String32.BYTES, String32.BYTES);
-        amount = Bytes.toDouble(data, 3 * String32.BYTES);
-        fee = Bytes.toDouble(data, 3 * String32.BYTES + Double.BYTES);
-        key = Bytes.toString(data, 3 * String32.BYTES + 2 * Double.BYTES, String32.BYTES);
-        next_hash = Bytes.toString(data, 3 * String32.BYTES + 2 * Double.BYTES + String32.BYTES, String32.BYTES);
-        delegate = Bytes.toString(data, 3 * String32.BYTES + 2 * Double.BYTES + 2 * String32.BYTES, String32.BYTES);
-        time = Bytes.toLong(data, 3 * String32.BYTES + 2 * Double.BYTES + 3 * String32.BYTES);
+    public void parse(Bytes data) {
+        domain = data.readString32();
+        from = data.readString32();
+        to = data.readString32();
+        amount = data.readDouble();
+        fee =  data.readDouble();
+        key = data.readString32();
+        next_hash = data.readString32();
+        delegate = data.readString32();
+        time = data.readLong();
     }
 }

@@ -1,10 +1,43 @@
 package com.metabrain.gdb.utils;
 
+import com.metabrain.gdb.model.String32;
+
 import java.nio.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class Bytes {
+
+    private byte[] bytes;
+    private int position;
+
+    public Bytes(byte[] bytes) {
+        this.bytes = bytes;
+        this.position = 0;
+    }
+
+    public byte[] read(int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(bytes, position, result, 0, length);
+        position += length;
+        return result;
+    }
+
+    public String readString32() {
+        return toString(read(String32.BYTES));
+    }
+
+    public String readString(int length) {
+        return toString(read(length));
+    }
+
+    public Double readDouble() {
+        return toDouble(read(Double.BYTES));
+    }
+
+    public Long readLong() {
+        return toLong(read(Long.BYTES));
+    }
 
     public static byte[] fromInt(int value) {
         return ByteBuffer.allocate(4).putInt(value).array();
@@ -14,12 +47,12 @@ public class Bytes {
         return ByteBuffer.wrap(bytes).getInt();
     }
 
-    public static byte[] fromLong(long value) {
-        return ByteBuffer.allocate(Long.BYTES).putLong(value).array();
+    public static byte[] fromLong(Long value) {
+        return ByteBuffer.allocate(Long.BYTES).putLong(value == null ? 0L : value).array();
     }
 
-    public static byte[] fromDouble(double value) {
-        return ByteBuffer.allocate(Double.BYTES).putDouble(value).array();
+    public static byte[] fromDouble(Double value) {
+        return ByteBuffer.allocate(Double.BYTES).putDouble(value == null ? 0d : value).array();
     }
 
     public static long toLong(byte[] bytes) {
@@ -73,10 +106,6 @@ public class Bytes {
         return byteBuffer.array();
     }
 
-    public static String toString(byte[] bytes) {
-        return new String(bytes).trim();
-    }
-
     public static byte[] concat(byte[] a, byte[] b) {
         byte[] c = new byte[a.length + b.length];
         System.arraycopy(a, 0, c, 0, a.length);
@@ -111,6 +140,11 @@ public class Bytes {
         System.arraycopy(stringBytes, 0, bytes, 0, stringBytes.length);
         return bytes;
     }
+
+    public static String toString(byte[] bytes) {
+        return toString(bytes, 0, bytes.length);
+    }
+
     public static String toString(byte[] data, int offset, int size) {
         int firstZeroIndex = size;
         for (int i = 0; i < size; i++) {
@@ -126,7 +160,15 @@ public class Bytes {
         return ByteBuffer.wrap(data, offset, Double.BYTES).getDouble();
     }
 
+    public static Double toDouble(byte[] data) {
+        return ByteBuffer.wrap(data).getDouble();
+    }
+
     public static Long toLong(byte[] data, int offset) {
         return ByteBuffer.wrap(data, offset, Long.BYTES).getLong();
+    }
+
+    public long[] readLongArray() {
+        return toLongArray(bytes);
     }
 }

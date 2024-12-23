@@ -1,13 +1,11 @@
 package com.metabrain.gdb;
 
-import com.metabrain.gdb.model.BigConstArrayCell;
+import com.metabrain.gdb.model.BigArrayCell;
 import com.metabrain.gdb.model.Crc16;
 import com.metabrain.gdb.model.Hash;
 import com.metabrain.gdb.model.KeyVal;
 
-import java.util.function.Supplier;
-
-public class BigMap<Val extends BigConstArrayCell> {
+public class BigMap<Val extends BigArrayCell> {
     private final BigArray<KeyVal> keys;
     private final BigArray<Hash> hashes;
     private final BigArray<Val> values;
@@ -16,7 +14,7 @@ public class BigMap<Val extends BigConstArrayCell> {
         keys = new BigArray<>(infinityFileID + ".keys", KeyVal.class);
         hashes = new BigArray<>(infinityFileID + ".hashes", Hash.class);
         values = new BigArray<>(infinityFileID + ".values", valClass);
-        if (hashes.fileData.sumFilesSize == 0) {
+        if (hashes.fileSize == 0) {
             hashes.add(new Hash());
             keys.add(new KeyVal());
         }
@@ -67,13 +65,12 @@ public class BigMap<Val extends BigConstArrayCell> {
             while (true) {
                 KeyVal keyVal = keys.get(keyIndex);
                 if (key.equals(keyVal.key)) {
-                    keyVal.value_index = values.add(value);
-                    keys.set(keyIndex, keyVal);
-                    break;
+                    values.set(keyVal.value_index, value);
+                    return;
                 } else if (keyVal.next_key_index == 0) {
                     keyVal.next_key_index = keys.add(new KeyVal(key, values.add(value)));
                     keys.set(keyIndex, keyVal);
-                    break;
+                    return;
                 }
                 keyIndex = keyVal.next_key_index;
             }

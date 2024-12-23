@@ -6,82 +6,57 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+
+import static com.hatosh.wallet.Utils.time;
 
 public class BigFile {
 
-    public final static String INFINITY_FILE_PART_PREFIX = "part";
-    public long partSize;
-    String infinityFileID;
-    public BigFileData fileData;
-    ActionThread mainThread;
-    public static Map<String, BigFileData> infinityFileCache = new HashMap<>();
+    final long BLOCK_SIZE = 4096 * 1024;
+    String fileName;
+    public long fileSize = 0;
+    public ArrayList<RandomAccessFile> blocks = new ArrayList<>();
 
-    public BigFile(String infinityFileID) {
-        this.infinityFileID = infinityFileID;
-        DiskManager diskManager = DiskManager.getInstance();
-        this.mainThread = diskManager.mainThread;
-        this.partSize = diskManager.partSize;
-
-        fileData = infinityFileCache.get(infinityFileID);
-        if (fileData == null) {
-            fileData = new BigFileData();
-            Map<String, String> fileSettings = diskManager.properties.getSection(infinityFileID);
-            if (fileSettings != null)
-                for (int i = 0; fileSettings.containsKey(INFINITY_FILE_PART_PREFIX + i); i++) {
-                    try {
-                        String partFileName = fileSettings.get(INFINITY_FILE_PART_PREFIX + i);
-                        RandomAccessFile partRandomAccessFile = new RandomAccessFile(partFileName, "rw");
-                        fileData.files.add(partRandomAccessFile);
-                        fileData.sumFilesSize += partRandomAccessFile.length();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-        }
-
+    public BigFile(String fileName) {
+        this.fileName = fileName + time();
+        getFile(0);
     }
 
     RandomAccessFile getFile(int index) {
-        // TODO create file in action thread
-        if (index == fileData.files.size()) {
+        if (index >= blocks.size()) {
             try {
-                DiskManager diskManager = DiskManager.getInstance();
-                String partName = INFINITY_FILE_PART_PREFIX + index;
-                String newFileName = infinityFileID + "." + partName;
-                File partFile = new File(diskManager.dbDir, newFileName);
-                diskManager.properties.put(infinityFileID, partName, partFile.getAbsolutePath());
-                RandomAccessFile partRandomAccessFile = new RandomAccessFile(partFile, "rw");
-                fileData.files.add(partRandomAccessFile);
+                File block = new File(fileName + index + ".bin");
+                RandomAccessFile partRandomAccessFile = new RandomAccessFile(block, "rw");
+                blocks.add(partRandomAccessFile);
+                fileSize += block.length();
                 return partRandomAccessFile;
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                return null;
             }
         }
-        return fileData.files.get(index);
+        return blocks.get(index);
     }
 
     public byte[] read(long start, long length) {
         long end = start + length;
-        if (end > fileData.sumFilesSize)
+        if (end > fileSize)
             return null;
 
-        int startFileIndex = (int) (start / partSize);
-        int endFileIndex = (int) (end / partSize);
+        int startFileIndex = (int) (start / BLOCK_SIZE);
+        int endFileIndex = (int) (end / BLOCK_SIZE);
         if (startFileIndex == endFileIndex) {
-            RandomAccessFile readingFile = getFile(startFileIndex);
-            int startInFile = (int) (start % partSize);
-            return mainThread.read(readingFile, startInFile, (int) length);
+            RandomAccessFile readingFile = blocks.get(startFileIndex);
+            int startInFile = (int) (start % BLOCK_SIZE);
+            return readFromFile(readingFile, startInFile, (int) length);
         } else {
-            RandomAccessFile firstFile = getFile(startFileIndex);
-            RandomAccessFile secondFile = getFile(endFileIndex);
-            int lengthInSecondFile = (int) (end % partSize);
+            RandomAccessFile firstFile = blocks.get(startFileIndex);
+            RandomAccessFile secondFile = blocks.get(endFileIndex);
+            int lengthInSecondFile = (int) (end % BLOCK_SIZE);
             int lengthInFirstFile = (int) (length - lengthInSecondFile);
-            int startInFirstFile = (int) (start % partSize);
+            int startInFirstFile = (int) (start % BLOCK_SIZE);
             int startInSecondFile = 0;
-            byte[] dataFromFirstFile = mainThread.read(firstFile, startInFirstFile, lengthInFirstFile);
-            byte[] dataFromSecondFile = mainThread.read(secondFile, startInSecondFile, lengthInSecondFile);
+            byte[] dataFromFirstFile = readFromFile(firstFile, startInFirstFile, lengthInFirstFile);
+            byte[] dataFromSecondFile = readFromFile(secondFile, startInSecondFile, lengthInSecondFile);
             return Bytes.concat(dataFromFirstFile, dataFromSecondFile);
         }
     }
@@ -89,40 +64,58 @@ public class BigFile {
     public void write(long start, byte[] data) {
         long length = data.length;
         long end = start + length;
-        if (start > fileData.sumFilesSize)
+        if (start > fileSize)
             return;
 
-        int startFileIndex = (int) (start / partSize);
-        int endFileIndex = (int) (end / partSize);
+        int startFileIndex = (int) (start / BLOCK_SIZE);
+        int endFileIndex = (int) (end / BLOCK_SIZE);
 
         RandomAccessFile firstWriteFile = getFile(startFileIndex);
         RandomAccessFile secondWriteFile = getFile(endFileIndex);
 
-        if (start == fileData.sumFilesSize)
-            fileData.sumFilesSize += data.length;
+        if (start == fileSize)
+            fileSize += data.length;
 
         if (startFileIndex == endFileIndex) {
-            int startInFile = (int) (start - startFileIndex * partSize);
-            mainThread.write(firstWriteFile, startInFile, data);
-            // TODO archive thread
+            int startInFile = (int) (start - startFileIndex * BLOCK_SIZE);
+            whiteToFile(firstWriteFile, startInFile, data);
         } else {
-            int lengthInSecondFile = (int) (end % partSize);
+            int lengthInSecondFile = (int) (end % BLOCK_SIZE);
             int lengthInFirstFile = (int) (length - lengthInSecondFile);
-            int startInFirstFile = (int) (start % partSize);
+            int startInFirstFile = (int) (start % BLOCK_SIZE);
             int startInSecondFile = 0;
             byte[] dataToFirstFile = new byte[lengthInFirstFile];
             byte[] dataToSecondFile = new byte[lengthInSecondFile];
             System.arraycopy(data, 0, dataToFirstFile, 0, lengthInFirstFile);
             System.arraycopy(data, lengthInFirstFile, dataToSecondFile, 0, lengthInSecondFile);
-            mainThread.write(firstWriteFile, startInFirstFile, dataToFirstFile);
-            mainThread.write(secondWriteFile, startInSecondFile, dataToSecondFile);
-            // TODO archive thread
+            whiteToFile(firstWriteFile, startInFirstFile, dataToFirstFile);
+            whiteToFile(secondWriteFile, startInSecondFile, dataToSecondFile);
+        }
+    }
+
+    void whiteToFile(RandomAccessFile file, long offset, byte[] data) {
+        try {
+            file.seek(offset);
+            file.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    byte[] readFromFile(RandomAccessFile file, long offset, int length) {
+        try {
+            file.seek(offset);
+            byte[] data = new byte[length];
+            file.read(data);
+            return data;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
         }
     }
 
     public long add(byte[] data) {
-        long lastSumFileSize = fileData.sumFilesSize;
-        write(lastSumFileSize, data);
-        return lastSumFileSize;
+        write(fileSize, data);
+        return fileSize;
     }
 }

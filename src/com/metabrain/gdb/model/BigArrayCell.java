@@ -1,4 +1,8 @@
 package com.metabrain.gdb.model;
 
-public interface BigArrayCell extends BigArrayCellParser, BigArrayCellBuilder {
+import com.metabrain.gdb.utils.Bytes;
+
+public interface BigArrayCell {
+    void parse(Bytes data);
+    byte[] build();
 }

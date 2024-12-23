@@ -71,8 +71,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
 
     public Token getToken(String domain) {
         Token token = tokensByDomain.get(domain);
-        if (token != null)
-            token = token.clone();
+        if (token != null) token = token.clone();
         return token;
     }
 
@@ -84,8 +83,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
         Account account = accountsNew.get(domain + address);
         if (account == null) {
             account = allAccounts.get(domain + address);
-            if (account != null)
-                account = account.clone();
+            if (account != null) account = account.clone();
         }
         return account;
     }
@@ -105,8 +103,8 @@ public abstract class TokenUtils extends AnalyticsUtils {
             Collections.reverse(transactionsNew);
             for (Transaction tran : transactionsNew) {
                 Account account = getAccount(tran.domain, tran.from);
-                tran.prev_hash = account.prev_hash;
-                account.prev_hash = tran.next_hash;
+                tran.prev_hash = account.next_hash;
+                account.next_hash = tran.next_hash;
                 setAccount(account);
                 transByHash.put(tran.next_hash, tran);
                 transHistory.add(tran);
@@ -159,8 +157,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public void commitTokens() {
         int newTokensCount = 0;
         for (Token token : tokensNew) {
-            if (!tokensByDomain.containsKey(token.domain))
-                newTokensCount++;
+            if (!tokensByDomain.containsKey(token.domain)) newTokensCount++;
             topExchange.add(token);
             if (topExchange.size() > 5) topExchange.poll();
             topGainers.add(token);
@@ -172,13 +169,15 @@ public abstract class TokenUtils extends AnalyticsUtils {
     }
 
     protected List<Transaction> tokenTrans(String domain, String address, String toAddress) {
+        if (domain == null) domain = GAS_DOMAIN;
         List<Transaction> result = new ArrayList<>();
         Account account = getAccount(domain, address);
-        Transaction tran = transByHash.get(account.prev_hash);
+        Transaction tran = transByHash.get(account.next_hash);
         for (int i = 0; i < 20; i++) {
             if (tran == null) break;
             if (toAddress == null || (toAddress.equals(tran.to)))
                 result.add(tran);
+            if (tran.prev_hash == null) break;
             tran = transByHash.get(tran.prev_hash);
         }
         return result;
@@ -189,13 +188,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
         return account != null ? account.balance : null;
     }
 
-    public String tokenSend(String scriptPath,
-                            String domain,
-                            String from_address,
-                            String to_address,
-                            Double amount,
-                            String pass,
-                            String delegate) {
+    public String tokenSend(String scriptPath, String domain, String from_address, String to_address, Double amount, String pass, String delegate) {
         if (from_address.equals(to_address) && amount != 0) error("from_address and to_address are the same");
         String key = pass != null ? pass.split(":")[0] : null;
         String next_hash = pass != null ? pass.split(":")[1] : null;
@@ -256,16 +249,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
         to.balance = Math.round((to.balance + amount - fee) * 100) / 100.0;
         setAccount(to);
 
-        setTran(new Transaction(domain,
-                from_address,
-                to_address,
-                amount,
-                fee,
-                key,
-                next_hash,
-                delegate,
-                time()
-        ));
+        setTran(new Transaction(domain, from_address, to_address, amount, fee, key, next_hash, delegate, time()));
         return next_hash;
     }
 

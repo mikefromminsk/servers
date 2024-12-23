@@ -4,8 +4,7 @@ import com.metabrain.gdb.utils.Bytes;
 
 import java.io.ByteArrayOutputStream;
 
-public class KeyVal implements BigConstArrayCell {
-    public static final int KEY_LENGTH = 32;
+public class KeyVal implements BigArrayCell {
 
     public String key;
     public long value_index;
@@ -20,15 +19,10 @@ public class KeyVal implements BigConstArrayCell {
     }
 
     @Override
-    public int getSize() {
-        return KeyVal.KEY_LENGTH + Long.BYTES * 2;
-    }
-
-    @Override
     public byte[] build() {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bos.write(Bytes.fromString(key, KEY_LENGTH));
+            bos.write(Bytes.fromString(key, String32.BYTES));
             bos.write(Bytes.fromLong(value_index));
             bos.write(Bytes.fromLong(next_key_index));
             return bos.toByteArray();
@@ -39,9 +33,9 @@ public class KeyVal implements BigConstArrayCell {
     }
 
     @Override
-    public void parse(byte[] data) {
-        key = Bytes.toString(data, 0, KEY_LENGTH);
-        value_index = Bytes.toLong(data, KEY_LENGTH);
-        next_key_index = Bytes.toLong(data, KEY_LENGTH + Long.BYTES);
+    public void parse(Bytes data) {
+        key = data.readString32();
+        value_index = data.readLong();
+        next_key_index = data.readLong();
     }
 }

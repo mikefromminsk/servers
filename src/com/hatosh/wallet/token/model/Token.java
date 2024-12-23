@@ -1,13 +1,13 @@
 package com.hatosh.wallet.token.model;
 
-import com.metabrain.gdb.model.BigConstArrayCell;
+import com.metabrain.gdb.model.BigArrayCell;
 import com.metabrain.gdb.model.String32;
 import com.metabrain.gdb.utils.Bytes;
 
 import java.io.ByteArrayOutputStream;
 
 
-public class Token implements BigConstArrayCell {
+public class Token implements BigArrayCell {
     public String domain;
     public String owner;
     public Double supply;
@@ -39,11 +39,6 @@ public class Token implements BigConstArrayCell {
     }
 
     @Override
-    public int getSize() {
-        return String32.BYTES * 2 + 4 * Double.BYTES + Long.BYTES;
-    }
-
-    @Override
     public byte[] build() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             bos.write(Bytes.fromString(domain, String32.BYTES));
@@ -61,13 +56,13 @@ public class Token implements BigConstArrayCell {
     }
 
     @Override
-    public void parse(byte[] data) {
-        domain = Bytes.toString(data, 0, String32.BYTES);
-        owner = Bytes.toString(data, String32.BYTES, String32.BYTES);
-        supply = Bytes.toDouble(data, String32.BYTES * 2);
-        price = Bytes.toDouble(data, String32.BYTES * 2 + Double.BYTES);
-        price24 = Bytes.toDouble(data, String32.BYTES * 2 + 2 * Double.BYTES);
-        volume24 = Bytes.toDouble(data, String32.BYTES * 2 + 3 * Double.BYTES);
-        created = Bytes.toLong(data, String32.BYTES * 2 + 4 * Double.BYTES);
+    public void parse(Bytes data) {
+        domain = data.readString32();
+        owner = data.readString32();
+        supply = data.readDouble();
+        price = data.readDouble();
+        price24 = data.readDouble();
+        volume24 = data.readDouble();
+        created = data.readLong();
     }
 }
