@@ -66,6 +66,8 @@ public class Node extends HttpServer implements WssServer.Callback {
                 }
                 send.commit();
                 System.out.println("Node synced with " + masterNode);
+            }, error -> {
+                System.out.println("Master node is down");
             });
         }
         wssServer = new WssServer(domain, this);

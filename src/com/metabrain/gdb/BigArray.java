@@ -41,4 +41,8 @@ public class BigArray<Type extends BigArrayCell> extends BigFile {
         long lastMaxPosition = super.add(data);
         return lastMaxPosition / data.length - 1;
     }
+
+    public long size() {
+        return (int) (super.fileSize / createValInstance().build().length);
+    }
 }

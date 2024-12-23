@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.hatosh.wallet.Utils.disableCertificateValidation;
 import static com.hatosh.wallet.Utils.time;
 
 public class TPS {
@@ -55,28 +56,6 @@ public class TPS {
     }
 
 
-    private static void disableCertificateValidation() throws Exception {
-        TrustManager[] trustAllCertificates = new TrustManager[]{
-                new X509TrustManager() {
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
 
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                    }
-
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                    }
-                }
-        };
-
-        SSLContext sc = SSLContext.getInstance("TLS");
-        sc.init(null, trustAllCertificates, new java.security.SecureRandom());
-        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-    }
 
 }

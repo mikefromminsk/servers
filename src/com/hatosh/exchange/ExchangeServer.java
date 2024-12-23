@@ -9,7 +9,6 @@ import com.hatosh.wallet.token.model.Transaction;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Scanner;
 
 public class ExchangeServer extends Node {
 
@@ -50,15 +49,5 @@ public class ExchangeServer extends Node {
             bots.computeIfAbsent(topic[1], k -> new Spred(k)).refreshTimers();
     }
 
-    public static void main(String[] args) throws IOException {
-        try {
-            new ExchangeServer("mytoken.space", null).start();
-            new FtpServer(21, 50000, 50100).start();
-            new TelegramRedirector(8443).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new Scanner(System.in).nextLine();
-    }
 
 }
