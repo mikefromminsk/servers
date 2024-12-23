@@ -11,19 +11,21 @@ import java.util.*;
 import com.hatosh.wallet.token.model.Account;
 import com.metabrain.gdb.BigArray;
 import com.metabrain.gdb.BigMap;
+import com.metabrain.gdb.model.String32;
 
 import static com.hatosh.exchange.ExchangeServer.onTranSuccess;
 import static com.hatosh.wallet.Node.broadcast;
+import static com.hatosh.wallet.data.Contract.GAS_DOMAIN;
+import static com.hatosh.wallet.data.Contract.GAS_OWNER;
 
 public abstract class TokenUtils extends AnalyticsUtils {
     public static final String GENESIS_ADDRESS = "owner";
 
     public static Long transHistorySaveTime = 0L;
-    public static final BigArray<Transaction> transHistory = new BigArray<>("transHistory");
-    public static final BigMap<Transaction> transByHash = new BigMap<>("transByHash");
-    public static final Map<String, String> userDomains = new HashMap<>();
-    public static final Map<String, Account> allAccounts = new HashMap<>();
-    public static final Map<String, Token> tokensByDomain = new HashMap<>();
+    public static final BigArray<Transaction> transHistory = new BigArray<>("transHistory", Transaction.class);
+    public static final BigMap<Transaction> transByHash = new BigMap<>("transByHash", Transaction.class);
+    public static final BigMap<Account> allAccounts = new BigMap<>("allAccounts", Account.class);
+    public static final BigMap<Token> tokensByDomain = new BigMap<>("tokensByDomain", Token.class);
 
     public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
     public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
@@ -75,9 +77,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
     }
 
     protected Transaction getTran(String nextHash) {
-        Transaction transaction = new Transaction();
-        transByHash.get(nextHash, transaction);
-        return transaction;
+        return transByHash.get(nextHash);
     }
 
     public Account getAccount(String domain, String address) {
@@ -92,11 +92,10 @@ public abstract class TokenUtils extends AnalyticsUtils {
 
     public List<Account> getSubAccounts(String address) {
         List<Account> result = new ArrayList<>();
-        if (userDomains.containsKey(address)) {
-            for (String domain : userDomains.getOrDefault(address, "").split(",")) {
-                Account account = getAccount(domain, address);
-                if (account != null) result.add(account.clone());
-            }
+        Account account = getAccount(GAS_DOMAIN, address);
+        while (account != null) {
+            result.add(account.clone());
+            account = getAccount(account.next_domain, account.address);
         }
         return result;
     }
@@ -109,7 +108,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
                 tran.prev_hash = account.prev_hash;
                 account.prev_hash = tran.next_hash;
                 setAccount(account);
-                //transByHash.put(tran.next_hash, tran);
+                transByHash.put(tran.next_hash, tran);
                 transHistory.add(tran);
                 if (transHistorySaveTime != 0) {
                     Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
@@ -139,14 +138,18 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public void commitAccounts() {
         int newAccountsCount = 0;
         for (Account account : accountsNew.values()) {
-            if (!allAccounts.containsKey(account.domain + account.address))
+            if (!allAccounts.containsKey(account.domain + account.address)) {
                 newAccountsCount++;
-            allAccounts.put(account.domain + account.address, account);
-
-            String userDomain = userDomains.getOrDefault(account.address, "");
-            if (!userDomain.contains(account.domain)) {
-                userDomains.put(account.address, userDomain + (userDomain.isEmpty() ? "" : ",") + account.domain);
+                if (!account.domain.equals(GAS_DOMAIN)) {
+                    Account gasAccount = getAccount(GAS_DOMAIN, account.address);
+                    if (gasAccount != null) {
+                        account.next_domain = gasAccount.next_domain;
+                        gasAccount.next_domain = account.domain;
+                        allAccounts.put(GAS_DOMAIN + gasAccount.address, gasAccount);
+                    }
+                }
             }
+            allAccounts.put(account.domain + account.address, account);
             trackAccumulate(account.domain + "_accounts");
         }
         trackAccumulate("accounts_count", newAccountsCount);
@@ -171,14 +174,12 @@ public abstract class TokenUtils extends AnalyticsUtils {
     protected List<Transaction> tokenTrans(String domain, String address, String toAddress) {
         List<Transaction> result = new ArrayList<>();
         Account account = getAccount(domain, address);
-        Transaction tran = new Transaction();
-        transByHash.get(account.prev_hash, tran);
-        int i = 0;
-        while (i < 100) {
+        Transaction tran = transByHash.get(account.prev_hash);
+        for (int i = 0; i < 20; i++) {
+            if (tran == null) break;
             if (toAddress == null || (toAddress.equals(tran.to)))
                 result.add(tran);
-            transByHash.get(tran.prev_hash, tran);
-            i++;
+            tran = transByHash.get(tran.prev_hash);
         }
         return result;
     }

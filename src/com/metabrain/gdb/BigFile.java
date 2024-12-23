@@ -112,6 +112,8 @@ public class BigFile {
             int startInSecondFile = 0;
             byte[] dataToFirstFile = new byte[lengthInFirstFile];
             byte[] dataToSecondFile = new byte[lengthInSecondFile];
+            System.arraycopy(data, 0, dataToFirstFile, 0, lengthInFirstFile);
+            System.arraycopy(data, lengthInFirstFile, dataToSecondFile, 0, lengthInSecondFile);
             mainThread.write(firstWriteFile, startInFirstFile, dataToFirstFile);
             mainThread.write(secondWriteFile, startInSecondFile, dataToSecondFile);
             // TODO archive thread

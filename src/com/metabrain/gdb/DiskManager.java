@@ -30,7 +30,7 @@ public class DiskManager {
 
     public final static String SECTION = "_manager_";
     public final static String PART_SIZE_KEY = "part_size";
-    public final static Integer PART_SIZE_DEFAULT = 4096;
+    public final static Integer PART_SIZE_DEFAULT = 4096 * 1024;
     public final static String CACHE_SIZE_KEY = "cache_size";
     public final static Integer CACHE_SIZE_DEFAULT = 4096;
 

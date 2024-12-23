@@ -26,7 +26,6 @@ public abstract class HttpServer extends NanoHTTPD {
 
     static Map<String, String> parseParams(NanoHTTPD.IHTTPSession session) {
         Map<String, String> params = new HashMap<>();
-        params.putAll(session.getHeaders());
         if (session.getMethod() == NanoHTTPD.Method.POST) {
             try {
                 session.parseBody(params);

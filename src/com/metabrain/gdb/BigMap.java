@@ -5,89 +5,83 @@ import com.metabrain.gdb.model.Crc16;
 import com.metabrain.gdb.model.Hash;
 import com.metabrain.gdb.model.KeyVal;
 
+import java.util.function.Supplier;
+
 public class BigMap<Val extends BigConstArrayCell> {
     private final BigArray<KeyVal> keys;
     private final BigArray<Hash> hashes;
     private final BigArray<Val> values;
 
-    public BigMap(String infinityFileID) {
-        keys = new BigArray<>(infinityFileID + ".keys");
-        hashes = new BigArray<>(infinityFileID + ".hashes");
-        values = new BigArray<>(infinityFileID + ".values");
+    public BigMap(String infinityFileID, Class<Val> valClass) {
+        keys = new BigArray<>(infinityFileID + ".keys", KeyVal.class);
+        hashes = new BigArray<>(infinityFileID + ".hashes", Hash.class);
+        values = new BigArray<>(infinityFileID + ".values", valClass);
         if (hashes.fileData.sumFilesSize == 0) {
             hashes.add(new Hash());
-            keys.add(new KeyVal());
-            keys.add(new KeyVal());
-            keys.add(new KeyVal());
-            keys.add(new KeyVal());
-            keys.add(new KeyVal());
             keys.add(new KeyVal());
         }
     }
 
-    public void get(String key, Val value) {
-        String hexHash = Integer.toHexString(Crc16.hash(key));
-        int link_index = 0;
+    public Val get(String key) {
+        String hexHash = String.format("%04x", Crc16.hash(key));
         long index = 0;
-        Hash currentHash = new Hash();
         for (int i = 0; i < 4; i++) {
-            hashes.get(index, currentHash);
-            link_index = Integer.parseInt("" + hexHash.charAt(i), 16);
-            index = currentHash.links[link_index];
+            Hash currentHash = hashes.get(index);
+            index = currentHash.links[Integer.parseInt("" + hexHash.charAt(i), 16)];
             if (index == 0) {
                 break;
             }
         }
-        KeyVal keyVal = new KeyVal();
         while (index != 0) {
-            keys.get(index, keyVal);
+            KeyVal keyVal = keys.get(index);
             if (key.equals(keyVal.key)) {
-                values.get(keyVal.value_index, value);
-                break;
+                return values.get(keyVal.value_index);
             }
             index = keyVal.next_key_index;
         }
+        return null;
     }
 
     public void put(String key, Val value) {
-        String hexHash = Integer.toHexString(Crc16.hash(key));
-        long index = 0;
+        String hexHash = String.format("%04x", Crc16.hash(key));
+        long hashIndex = 0;
         int link_index = 0;
-        Hash currentHash = new Hash();
+        // search in hash tree
         for (int i = 0; i < 3; i++) {
-            hashes.get(index, currentHash);
+            Hash currentHash = hashes.get(hashIndex);
             link_index = Integer.parseInt("" + hexHash.charAt(i), 16);
             if (currentHash.links[link_index] == 0) {
                 currentHash.links[link_index] = hashes.add(new Hash());
-                hashes.set(index, currentHash);
+                hashes.set(hashIndex, currentHash);
             }
-            index = currentHash.links[link_index];
+            hashIndex = currentHash.links[link_index];
         }
-        hashes.get(index, currentHash);
+        // search in key chain
+        Hash lastHash = hashes.get(hashIndex);
         link_index = Integer.parseInt("" + hexHash.charAt(3), 16);
-        KeyVal keyVal = new KeyVal();
-        if (currentHash.links[link_index] == 0) {
-            keyVal.key = key;
-            keyVal.value_index = values.add(value);
-            currentHash.links[link_index] = keys.add(keyVal);
-            hashes.set(index, currentHash);
+        if (lastHash.links[link_index] == 0) {
+            lastHash.links[link_index] = keys.add(new KeyVal(key, values.add(value)));
+            hashes.set(hashIndex, lastHash);
         } else {
+            long keyIndex = lastHash.links[link_index];
             while (true) {
-                keys.get(index, keyVal);
+                KeyVal keyVal = keys.get(keyIndex);
                 if (key.equals(keyVal.key)) {
                     keyVal.value_index = values.add(value);
-                    keys.set(index, keyVal);
+                    keys.set(keyIndex, keyVal);
                     break;
                 } else if (keyVal.next_key_index == 0) {
-                    KeyVal newKeyVal = new KeyVal();
-                    newKeyVal.key = key;
-                    newKeyVal.value_index = values.add(value);
-                    keyVal.next_key_index = keys.add(newKeyVal);
-                    keys.set(index, keyVal);
+                    keyVal.next_key_index = keys.add(new KeyVal(key, values.add(value)));
+                    keys.set(keyIndex, keyVal);
                     break;
                 }
-                index = keyVal.next_key_index;
+                keyIndex = keyVal.next_key_index;
             }
         }
     }
+
+    public boolean containsKey(String key) {
+        return get(key) != null;
+    }
+
 }

@@ -45,18 +45,14 @@ public class Node extends HttpServer implements WssServer.Callback {
         }
         if (masterNode == null) {
             try {
-                String transStr = readFile("trans.json");
-                TransactionHistory responseObj = gson.fromJson(transStr, TransactionHistory.class);
-                Send send = new Send();
-                for (Transaction tran : responseObj.trans) {
-                    send.tokenSend(null, tran.domain, tran.from, tran.to, tran.amount, tran.key + ":" + tran.next_hash, tran.delegate);
+                if (TokenUtils.transHistory.fileData.sumFilesSize == 0) {
+                    Init init = new Init();
+                    init.run(null, map("admin_password", "pass"));
+                    init.commit();
                 }
-                send.commit();
-                System.out.println("Node loaded");
-            } catch (Exception e) {
-                Init init = new Init();
-                init.run(null, map("admin_password", "pass"));
-                init.commit();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+                System.exit(0);
             }
         } else {
             int masterPortOffset = getPortOffset(masterNode);

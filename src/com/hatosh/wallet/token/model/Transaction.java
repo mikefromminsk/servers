@@ -1,13 +1,12 @@
 package com.hatosh.wallet.token.model;
 
 import com.metabrain.gdb.model.BigConstArrayCell;
+import com.metabrain.gdb.model.String32;
 import com.metabrain.gdb.utils.Bytes;
 
 import java.io.ByteArrayOutputStream;
 
 public class Transaction implements BigConstArrayCell {
-    public static final int md5Size = 32;
-    public static final int domainSize = 16;
     public String domain;
     public String from;
     public String to;
@@ -44,20 +43,20 @@ public class Transaction implements BigConstArrayCell {
 
     @Override
     public int getSize() {
-        return md5Size * 3 + domainSize + 2 * Double.BYTES + 2 * Long.BYTES;
+        return String32.BYTES * 3 + String32.BYTES + 2 * Double.BYTES + 2 * Long.BYTES;
     }
 
     @Override
     public byte[] build() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            bos.write(Bytes.fromString(domain, domainSize));
-            bos.write(Bytes.fromString(from, domainSize));
-            bos.write(Bytes.fromString(to, domainSize));
+            bos.write(Bytes.fromString(domain, String32.BYTES));
+            bos.write(Bytes.fromString(from, String32.BYTES));
+            bos.write(Bytes.fromString(to, String32.BYTES));
             bos.write(Bytes.fromDouble(amount));
             bos.write(Bytes.fromDouble(fee));
-            bos.write(Bytes.fromString(key, md5Size));
-            bos.write(Bytes.fromString(next_hash, md5Size));
-            bos.write(Bytes.fromString(delegate, md5Size));
+            bos.write(Bytes.fromString(key, String32.BYTES));
+            bos.write(Bytes.fromString(next_hash, String32.BYTES));
+            bos.write(Bytes.fromString(delegate, String32.BYTES));
             bos.write(Bytes.fromLong(time));
             return bos.toByteArray();
         } catch (Exception e) {
@@ -68,14 +67,14 @@ public class Transaction implements BigConstArrayCell {
 
     @Override
     public void parse(byte[] data) {
-        domain = Bytes.toString(data, 0, domainSize);
-        from = Bytes.toString(data, domainSize, domainSize);
-        to = Bytes.toString(data, 2 * domainSize, domainSize);
-        amount = Bytes.toDouble(data, 3 * domainSize);
-        fee = Bytes.toDouble(data, 3 * domainSize + Double.BYTES);
-        key = Bytes.toString(data, 3 * domainSize + 2 * Double.BYTES, md5Size);
-        next_hash = Bytes.toString(data, 3 * domainSize + 2 * Double.BYTES + md5Size, md5Size);
-        delegate = Bytes.toString(data, 3 * domainSize + 2 * Double.BYTES + 2 * md5Size, md5Size);
-        time = Bytes.toLong(data, 3 * domainSize + 2 * Double.BYTES + 3 * md5Size);
+        domain = Bytes.toString(data, 0, String32.BYTES);
+        from = Bytes.toString(data, String32.BYTES, String32.BYTES);
+        to = Bytes.toString(data, 2 * String32.BYTES, String32.BYTES);
+        amount = Bytes.toDouble(data, 3 * String32.BYTES);
+        fee = Bytes.toDouble(data, 3 * String32.BYTES + Double.BYTES);
+        key = Bytes.toString(data, 3 * String32.BYTES + 2 * Double.BYTES, String32.BYTES);
+        next_hash = Bytes.toString(data, 3 * String32.BYTES + 2 * Double.BYTES + String32.BYTES, String32.BYTES);
+        delegate = Bytes.toString(data, 3 * String32.BYTES + 2 * Double.BYTES + 2 * String32.BYTES, String32.BYTES);
+        time = Bytes.toLong(data, 3 * String32.BYTES + 2 * Double.BYTES + 3 * String32.BYTES);
     }
 }

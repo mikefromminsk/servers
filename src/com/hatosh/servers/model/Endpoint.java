@@ -76,10 +76,6 @@ public abstract class Endpoint extends Utils {
         return getDoubleRequired(key, null);
     }
 
-    public String getScriptName() {
-        return scriptPath.substring(scriptPath.lastIndexOf('/') + 1, scriptPath.lastIndexOf('.'));
-    }
-
     public Map<String, String> error(Object message) {
         if (message instanceof String) {
             throw new RuntimeException((String) message);

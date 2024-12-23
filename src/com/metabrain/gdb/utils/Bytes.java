@@ -112,14 +112,14 @@ public class Bytes {
         return bytes;
     }
     public static String toString(byte[] data, int offset, int size) {
-        int firstZeroIndex = 0;
+        int firstZeroIndex = size;
         for (int i = 0; i < size; i++) {
             if (data[offset + i] == 0) {
                 firstZeroIndex = i;
                 break;
             }
         }
-        return new String(data, offset, offset + firstZeroIndex);
+        return firstZeroIndex == 0 ? null : new String(data, offset, firstZeroIndex);
     }
 
     public static Double toDouble(byte[] data, int offset) {
