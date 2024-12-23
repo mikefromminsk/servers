@@ -18,7 +18,7 @@ public class BigFile {
     public ArrayList<RandomAccessFile> blocks = new ArrayList<>();
 
     public BigFile(String fileName) {
-        this.fileName = fileName + time();
+        this.fileName = fileName;
         getFile(0);
     }
 

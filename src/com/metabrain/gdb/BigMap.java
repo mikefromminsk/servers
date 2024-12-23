@@ -5,10 +5,14 @@ import com.metabrain.gdb.model.Crc16;
 import com.metabrain.gdb.model.Hash;
 import com.metabrain.gdb.model.KeyVal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BigMap<Val extends BigArrayCell> {
     private final BigArray<KeyVal> keys;
     private final BigArray<Hash> hashes;
     private final BigArray<Val> values;
+    private final Map<String, Val> cache = new HashMap<>();
 
     public BigMap(String infinityFileID, Class<Val> valClass) {
         keys = new BigArray<>(infinityFileID + ".keys", KeyVal.class);
@@ -21,6 +25,9 @@ public class BigMap<Val extends BigArrayCell> {
     }
 
     public Val get(String key) {
+        if (cache.containsKey(key)) {
+            return cache.get(key);
+        }
         String hexHash = String.format("%04x", Crc16.hash(key));
         long index = 0;
         for (int i = 0; i < 4; i++) {
@@ -33,7 +40,12 @@ public class BigMap<Val extends BigArrayCell> {
         while (index != 0) {
             KeyVal keyVal = keys.get(index);
             if (key.equals(keyVal.key)) {
-                return values.get(keyVal.value_index);
+                Val val = values.get(keyVal.value_index);
+                cache.put(key, val);
+                if (cache.size() > 1000) {
+                    cache.clear();
+                }
+                return val;
             }
             index = keyVal.next_key_index;
         }
@@ -41,6 +53,7 @@ public class BigMap<Val extends BigArrayCell> {
     }
 
     public void put(String key, Val value) {
+        cache.put(key, value);
         String hexHash = String.format("%04x", Crc16.hash(key));
         long hashIndex = 0;
         int link_index = 0;
