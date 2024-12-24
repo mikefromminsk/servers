@@ -8,8 +8,8 @@ import java.util.List;
 public class TransHistory extends TokenUtils {
     @Override
     public void run() {
-        Long page = getLongRequired("page");
-        Long size = getLongRequired("size");
+        Long page = getLong("page", 0L);
+        Long size = getLong("size", 1000L);
         List<Tran> trans = new ArrayList<>();
         for (int i = 0; i < size && i < transHistory.size(); i++)
             trans.add(transHistory.get(page * size + i));

@@ -42,7 +42,7 @@ public class Node extends HttpServer implements WssServer.Callback {
         }
         if (masterNode == null) {
             try {
-                if (transHistory.fileSize == 0) {
+                if (transHistory.size() == 0) {
                     Init init = new Init();
                     init.run(null, map("admin_password", "pass"));
                     init.commit();
@@ -160,7 +160,8 @@ public class Node extends HttpServer implements WssServer.Callback {
                         response -> {
                             System.out.println("Master node is successfully updated");
                         }, error -> {
-                            System.out.println("Master node is down");
+                            System.out.println(masterNode + ":" + (HTTPS_START_RANGE + getPortOffset(masterNode)) + "/mfm-token/send");
+                            System.out.println("Master node is down " + error);
                         });
             }
         }

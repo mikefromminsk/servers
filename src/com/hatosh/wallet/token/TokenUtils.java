@@ -103,7 +103,9 @@ public abstract class TokenUtils extends AnalyticsUtils {
                 setAccount(account);
                 transByHash.put(tran.next_hash, tran);
                 transHistory.add(tran);
-                broadcast("transactions", gson.fromJson(gson.toJson(tran), Map.class));
+                Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
+                }.getType());
+                broadcast("transactions", map);
                 trackAccumulate(tran.domain + "_trans");
             }
             trackAccumulate("trans_count", transactionsNew.size());
