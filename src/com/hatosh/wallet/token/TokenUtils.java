@@ -3,27 +3,22 @@ package com.hatosh.wallet.token;
 import com.google.gson.reflect.TypeToken;
 import com.hatosh.wallet.analytics.AnalyticsUtils;
 import com.hatosh.wallet.token.model.Token;
-import com.hatosh.wallet.token.model.Transaction;
+import com.hatosh.wallet.token.model.Tran;
 
-import java.io.IOException;
 import java.util.*;
 
 import com.hatosh.wallet.token.model.Account;
 import com.metabrain.gdb.BigArray;
 import com.metabrain.gdb.BigMap;
-import com.metabrain.gdb.model.String32;
 
-import static com.hatosh.exchange.ExchangeServer.onTranSuccess;
 import static com.hatosh.wallet.Node.broadcast;
 import static com.hatosh.wallet.data.Contract.GAS_DOMAIN;
-import static com.hatosh.wallet.data.Contract.GAS_OWNER;
 
 public abstract class TokenUtils extends AnalyticsUtils {
     public static final String GENESIS_ADDRESS = "owner";
 
-    public static Long transHistorySaveTime = 0L;
-    public static final BigArray<Transaction> transHistory = new BigArray<>("transHistory", Transaction.class);
-    public static final BigMap<Transaction> transByHash = new BigMap<>("transByHash", Transaction.class);
+    public static final BigArray<Tran> transHistory = new BigArray<>("transHistory", Tran.class);
+    public static final BigMap<Tran> transByHash = new BigMap<>("transByHash", Tran.class);
     public static final BigMap<Account> allAccounts = new BigMap<>("allAccounts", Account.class);
     public static final BigMap<Token> tokensByDomain = new BigMap<>("tokensByDomain", Token.class);
 
@@ -31,7 +26,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
 
     Map<String, Account> accountsNew = new LinkedHashMap<>();
-    List<Transaction> transactionsNew = new ArrayList<>();
+    List<Tran> transactionsNew = new ArrayList<>();
     List<Token> tokensNew = new ArrayList<>();
 
     static String tokenKey(String domain, String address, String password, String prevKey) {
@@ -57,7 +52,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
         return getCandleLastValue(domain + "_price");
     }
 
-    private void setTran(Transaction tran) {
+    private void setTran(Tran tran) {
         transactionsNew.add(tran);
     }
 
@@ -75,7 +70,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
         return token;
     }
 
-    protected Transaction getTran(String nextHash) {
+    protected Tran getTran(String nextHash) {
         return transByHash.get(nextHash);
     }
 
@@ -101,34 +96,17 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public synchronized void commitTrans() {
         if (transactionsNew != null) {
             Collections.reverse(transactionsNew);
-            for (Transaction tran : transactionsNew) {
+            for (Tran tran : transactionsNew) {
                 Account account = getAccount(tran.domain, tran.from);
                 tran.prev_hash = account.next_hash;
                 account.next_hash = tran.next_hash;
                 setAccount(account);
                 transByHash.put(tran.next_hash, tran);
                 transHistory.add(tran);
-                if (transHistorySaveTime != 0) {
-                    Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
-                    }.getType());
-                    onTranSuccess(tran);
-                    broadcast("transactions", map);
-                }
+                broadcast("transactions", gson.fromJson(gson.toJson(tran), Map.class));
                 trackAccumulate(tran.domain + "_trans");
             }
             trackAccumulate("trans_count", transactionsNew.size());
-            if (time() > transHistorySaveTime + 60) {
-                if (transHistorySaveTime != 0) {
-                    new Thread(() -> {
-                        try {
-                            writeFile("trans.json", transHistory);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).start();
-                }
-                transHistorySaveTime = time();
-            }
             transactionsNew.clear();
         }
     }
@@ -168,11 +146,11 @@ public abstract class TokenUtils extends AnalyticsUtils {
         tokensNew.clear();
     }
 
-    protected List<Transaction> tokenTrans(String domain, String address, String toAddress) {
+    protected List<Tran> tokenTrans(String domain, String address, String toAddress) {
         if (domain == null) domain = GAS_DOMAIN;
-        List<Transaction> result = new ArrayList<>();
+        List<Tran> result = new ArrayList<>();
         Account account = getAccount(domain, address);
-        Transaction tran = transByHash.get(account.next_hash);
+        Tran tran = transByHash.get(account.next_hash);
         for (int i = 0; i < 20; i++) {
             if (tran == null) break;
             if (toAddress == null || (toAddress.equals(tran.to)))
@@ -203,7 +181,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
                 owner.prev_key = "";
                 owner.next_hash = "";
                 owner.balance = amount;
-                owner.delegate = "mfm-token/send.php";
+                owner.delegate = "mfm-token/send";
                 setAccount(owner);
                 if (amount > 0) {
                     setToken(new Token(domain, to_address, amount, time()));
@@ -249,7 +227,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
         to.balance = Math.round((to.balance + amount - fee) * 100) / 100.0;
         setAccount(to);
 
-        setTran(new Transaction(domain, from_address, to_address, amount, fee, key, next_hash, delegate, time()));
+        setTran(new Tran(domain, from_address, to_address, amount, fee, key, next_hash, delegate, time()));
         return next_hash;
     }
 

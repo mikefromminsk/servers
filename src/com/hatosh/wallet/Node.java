@@ -1,9 +1,7 @@
 package com.hatosh.wallet;
 
 import com.hatosh.servers.HttpServer;
-import com.hatosh.servers.WssServer;
 import com.hatosh.servers.model.Endpoint;
-import com.hatosh.servers.model.Message;
 import com.hatosh.servers.model.Subscription;
 import com.hatosh.utils.Request;
 import com.hatosh.utils.SSLContextBuilder;
@@ -16,25 +14,24 @@ import com.hatosh.wallet.data.mining.Miner;
 import com.hatosh.wallet.data.mining.Mint;
 import com.hatosh.wallet.data.wallet.Main;
 import com.hatosh.wallet.token.*;
-import com.hatosh.wallet.token.model.Transaction;
-import org.java_websocket.WebSocket;
+import com.hatosh.wallet.token.model.Tran;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 
 import static com.hatosh.utils.Params.map;
 import static com.hatosh.wallet.Utils.*;
+import static com.hatosh.wallet.WssServer.WSS_START_RANGE;
+import static com.hatosh.wallet.token.TokenUtils.transHistory;
 
 public class Node extends HttpServer implements WssServer.Callback {
     static final int HTTPS_START_RANGE = 8000;
 
     static String masterNode;
     static WssServer wssServer;
-
-    class TransactionHistory {
-        List<Transaction> trans;
-    }
+    static WssClient wssClient;
 
     public Node(String domain, String masterNode) {
         super(domain, HTTPS_START_RANGE + getPortOffset(domain));
@@ -45,7 +42,7 @@ public class Node extends HttpServer implements WssServer.Callback {
         }
         if (masterNode == null) {
             try {
-                if (TokenUtils.transHistory.fileSize == 0) {
+                if (transHistory.fileSize == 0) {
                     Init init = new Init();
                     init.run(null, map("admin_password", "pass"));
                     init.commit();
@@ -55,22 +52,52 @@ public class Node extends HttpServer implements WssServer.Callback {
                 System.exit(0);
             }
         } else {
-            int masterPortOffset = getPortOffset(masterNode);
-            Request.post(masterNode + ":" + (HTTPS_START_RANGE + masterPortOffset) + "/mfm-token/trans_history.php", map(
-                    "current", "w"
+            masterPortOffset = getPortOffset(masterNode);
+            wssClient = new WssClient(URI.create(
+                    (Node.masterNode.equals("localhost") ? "ws" : "wss") +
+                            "://" + Node.masterNode + ":" + (WSS_START_RANGE + masterPortOffset)));
+            wssClient.connect();
+            if (transHistory.size() == 0) {
+                syncWithMasterNode();
+            }
+        }
+        wssServer = new WssServer(domain, this);
+    }
+
+
+    class TransactionHistory {
+        List<Map<String, String>> trans;
+        Long trans_count;
+    }
+
+    long page = 0;
+    long size = 1000;
+    long trans_count = 100000000000L;
+    int masterPortOffset = 0;
+
+    void syncWithMasterNode() {
+        if (page * size < trans_count) {
+            Request.post(masterNode + ":" + (HTTPS_START_RANGE + masterPortOffset) + "/mfm-token/trans_history", map(
+                    "page", "" + page,
+                    "size", "1000"
             ), response -> {
                 TransactionHistory responseObj = gson.fromJson(response, TransactionHistory.class);
-                Send send = new Send();
-                for (Transaction tran : responseObj.trans) {
-                    send.tokenSend(null, tran.domain, tran.from, tran.to, tran.amount, tran.key + ":" + tran.next_hash, tran.delegate);
+                for (Map<String, String> tran : responseObj.trans) {
+                    try {
+                        Send send = new Send();
+                        send.run(null, tran);
+                        send.commit();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-                send.commit();
-                System.out.println("Node synced with " + masterNode);
+                page++;
+                trans_count = responseObj.trans_count;
+                syncWithMasterNode();
             }, error -> {
                 System.out.println("Master node is down");
             });
         }
-        wssServer = new WssServer(domain, this);
     }
 
     @Override
@@ -86,71 +113,56 @@ public class Node extends HttpServer implements WssServer.Callback {
     @Override
     public Endpoint getEndpoint(String uri) {
         switch (uri) {
-            case "mfm-token/send.php":
+            case "mfm-token/send":
                 return new Send();
-            case "mfm-token/account.php":
+            case "mfm-token/account":
                 return new Account();
-            case "mfm-token/accounts.php":
+            case "mfm-token/accounts":
                 return new Accounts();
-            case "mfm-token/search.php":
+            case "mfm-token/search":
                 return new Search();
-            case "mfm-token/tran.php":
-                return new Tran();
-            case "mfm-token/trans.php":
+            case "mfm-token/tran":
+                return new com.hatosh.wallet.token.Tran();
+            case "mfm-token/trans":
                 return new Trans();
-            case "mfm-token/profile.php":
+            case "mfm-token/profile":
                 return new Token();
-            case "mfm-token/token_info.php":
+            case "mfm-token/token_info":
                 return new TokenAnalytics();
-            case "mfm-token/trans_history.php":
+            case "mfm-token/trans_history":
                 return new TransHistory();
-            case "mfm-analytics/track.php":
+            case "mfm-analytics/track":
                 return new Track();
-            case "mfm-analytics/events.php":
+            case "mfm-analytics/events":
                 return new Events();
-            case "mfm-analytics/candles.php":
+            case "mfm-analytics/candles":
                 return new Candles();
-            case "mfm-analytics/funnel.php":
+            case "mfm-analytics/funnel":
                 return new Funnel();
-            case "mfm-mining/mint.php":
+            case "mfm-mining/mint":
                 return new Mint();
-            case "mfm-mining/miner.php":
+            case "mfm-mining/miner":
                 return new Miner();
-            case "mfm-mining/info.php":
+            case "mfm-mining/info":
                 return new Info();
-            case "mfm-wallet/home/api/main.php":
+            case "mfm-wallet/home/api/main":
                 return new Main();
         }
         return null;
     }
 
     public static void broadcast(String channel, Map<String, String> data) {
-        if (wssServer.channels.containsKey(channel)) {
-            Iterator<WebSocket> iterator = wssServer.channels.get(channel).iterator();
-            Set<WebSocket> activeSubscribers = new HashSet<>();
-            while (iterator.hasNext()) {
-                WebSocket conn = iterator.next();
-                if (conn.isOpen()) {
-                    activeSubscribers.add(conn);
-                } else {
-                    iterator.remove();
-                }
+        if (wssServer != null) {
+            wssServer.broadcast(channel, data);
+            if (masterNode != null && channel.equals("transactions")) {
+                Request.post(masterNode + ":" + (HTTPS_START_RANGE + getPortOffset(masterNode)) + "/mfm-token/send",
+                        data,
+                        response -> {
+                            System.out.println("Master node is successfully updated");
+                        }, error -> {
+                            System.out.println("Master node is down");
+                        });
             }
-            Message message = new Message();
-            message.channel = channel;
-            message.data = data;
-            wssServer.broadcast(gson.toJson(message), activeSubscribers);
-        }
-        if (masterNode != null && channel.equals("transactions")) {
-            data.put("from_address", data.get("from"));
-            data.put("to_address", data.get("to"));
-            data.put("pass", (data.get("key") == null ? "" : data.get("key")) + ":" + data.get("next_hash"));
-            Request.post(masterNode + ":" + (HTTPS_START_RANGE + getPortOffset(masterNode))
-                    + "/mfm-token/send.php", data, response -> {
-                System.out.println("Master node is successfully updated");
-            }, error -> {
-                System.out.println("Master node is down");
-            });
         }
     }
 }

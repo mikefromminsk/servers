@@ -39,7 +39,7 @@ public class TelegramRedirector {
     }
 
     public void regBot(HttpsServer server, String botName) {
-        server.createContext("/" + botName, new RedirectHandler("http://localhost/mfm-telegram/hook.php?bot=" + botName));
+        server.createContext("/" + botName, new RedirectHandler("http://localhost/mfm-telegram/hook?bot=" + botName));
     }
 
 

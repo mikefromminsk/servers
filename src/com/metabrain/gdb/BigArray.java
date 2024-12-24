@@ -6,10 +6,12 @@ import com.metabrain.gdb.utils.Bytes;
 public class BigArray<Type extends BigArrayCell> extends BigFile {
 
     private final Class<Type> valClass;
+    private final long cellSize;
 
     public BigArray(String infinityFileID, Class<Type> valClass) {
         super(infinityFileID);
         this.valClass = valClass;
+        this.cellSize = createValInstance().build().length;
     }
 
     public Type createValInstance() {
@@ -43,6 +45,6 @@ public class BigArray<Type extends BigArrayCell> extends BigFile {
     }
 
     public long size() {
-        return (int) (super.fileSize / createValInstance().build().length);
+        return super.fileSize / cellSize;
     }
 }

@@ -25,10 +25,10 @@ public abstract class TokenRequests extends TokenUtils {
     }
 
     public void tokenSendAndCommit(String domain, String from, String to, double amount, String pass, String delegate) {
-        new Send().run("mfm-token/send.php", map(
+        new Send().run("mfm-token/send", map(
                 "domain", domain,
-                "from_address", from,
-                "to_address", to,
+                "from", from,
+                "to", to,
                 "pass", pass,
                 "amount", "" + amount,
                 "delegate", delegate
@@ -36,7 +36,7 @@ public abstract class TokenRequests extends TokenUtils {
     }
 
     public boolean botScriptReg(String domain, String botAddress) {
-        String placeScript = "mfm-exchange/place.php";
+        String placeScript = "mfm-exchange/place";
         tokenRegScript(domain, botAddress, placeScript);
         return tokenRegScript(GAS_DOMAIN, botAddress, placeScript);
     }
@@ -46,7 +46,7 @@ public abstract class TokenRequests extends TokenUtils {
 
     public static boolean tokenDelegate(String domain, String address, String pass, String script) throws SQLException {
         if (getAccount(domain, address) != null) {
-            return requestEquals("/mfm-token/send.php", map(
+            return requestEquals("/mfm-token/send", map(
                     "domain", domain,
                     "from_address", GENESIS_ADDRESS,
                     "to_address", address,

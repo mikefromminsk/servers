@@ -34,10 +34,10 @@ public class Wallet {
                             Success success,
                             Success error) {
         calcKeyHash(fromAddress, password, domain, prev_key, pass -> {
-            Request.post(host + "/mfm-token/send.php", map(
+            Request.post(host + "/mfm-token/send", map(
                     "domain", domain,
-                    "from_address", fromAddress,
-                    "to_address", toAddress,
+                    "from", fromAddress,
+                    "to", toAddress,
                     "amount", amount,
                     "pass", pass
             ), success, error);
@@ -51,10 +51,10 @@ public class Wallet {
                            Success success,
                            Success error) {
         calcStartHash(address, password, domain, pass -> {
-            Request.post(host + "/mfm-token/send.php", map(
+            Request.post(host + "/mfm-token/send", map(
                     "domain", domain,
-                    "from_address", "owner",
-                    "to_address", address,
+                    "from", "owner",
+                    "to", address,
                     "amount", "0",
                     "pass", ":" + pass
             ), success, error);
@@ -73,7 +73,7 @@ public class Wallet {
                             String amount,
                             Success success,
                             Success error) {
-        Request.post(host + "/mfm-token/account.php", map(
+        Request.post(host + "/mfm-token/account", map(
                 "domain", domain,
                 "address", fromAddress
         ), responseStr -> {

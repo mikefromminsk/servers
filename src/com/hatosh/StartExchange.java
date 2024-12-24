@@ -14,7 +14,13 @@ public class StartExchange {
     public static void main(String[] args) throws IOException {
         try {
             disableCertificateValidation();
-            new ExchangeServer("mytoken.space", "hatosh.com").start();
+            String site_domain = "localhost";
+            String masterNode = null;
+            if (args.length >= 1)
+                site_domain = args[0];
+            if (args.length >= 2)
+                masterNode = args[1];
+            new ExchangeServer(site_domain, masterNode).start();
             new FtpServer(21, 50000, 50100).start();
             new TelegramRedirector(8443).start();
         } catch (Exception e) {

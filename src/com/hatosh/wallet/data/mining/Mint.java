@@ -18,7 +18,7 @@ public class Mint extends Contract {
         Long nonce = getLongRequired("nonce");
         String domain = getRequired("domain");
 
-        tokenRegScript(domain, "mining", "mfm-mining/mint.php");
+        tokenRegScript(domain, "mining", "mfm-mining/mint");
 
         String lastHash = dataGet("mining/" + domain + "/last_hash");
         if (lastHash == null) lastHash = "";

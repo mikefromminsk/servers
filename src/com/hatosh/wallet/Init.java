@@ -34,12 +34,12 @@ public class Init extends Contract {
                         tokenPass(GAS_DOMAIN, GAS_OWNER, password), null);
             }
             if (token.mining > 0) {
-                tokenRegScript(token.domain, "mining", "mfm-mining/mint.php");
+                tokenRegScript(token.domain, "mining", "mfm-mining/mint");
                 tokenSendAndCommit(token.domain, GAS_OWNER, "mining", round(token.supply * token.mining / 100.0, 2),
                         tokenPass(token.domain, GAS_OWNER, password), null);
             }
             /*if (token.staking > 0) {
-                tokenRegScript(domain, "staking", "mfm-bank/unstake.php");
+                tokenRegScript(domain, "staking", "mfm-bank/unstake");
                 tokenSendAndCommit(domain, GAS_OWNER, "staking", Math.round(total * value / 100.0), password);
             }*/
         }
@@ -66,17 +66,17 @@ public class Init extends Contract {
 
         launchList(tokens, password);
 
-        /*String nonce = requestEquals("/mfm-mining/miner.php", Map.of("domain", "diamond")).get("nonce");
+        /*String nonce = requestEquals("/mfm-mining/miner", Map.of("domain", "diamond")).get("nonce");
 
         tokenRegAccount("diamond", "user", password);
-        requestEquals("/mfm-mining/mint.php", Map.of(
+        requestEquals("/mfm-mining/mint", Map.of(
                 "domain", "diamond",
                 "nonce", nonce,
                 "gas_address", "user",
                 "gas_pass", tokenPass(GAS_DOMAIN, "user", password)
         ));
 
-        requestEquals("/mfm-exchange/place.php", Map.of(
+        requestEquals("/mfm-exchange/place", Map.of(
                 "domain", "diamond",
                 "is_sell", 1,
                 "address", "user",
@@ -86,7 +86,7 @@ public class Init extends Contract {
                 "pass", tokenPass("diamond", "user", password)
         ));
 
-        requestEquals("/mfm-exchange/place.php", Map.of(
+        requestEquals("/mfm-exchange/place", Map.of(
                 "domain", "diamond",
                 "is_sell", 0,
                 "address", "user",
@@ -96,9 +96,9 @@ public class Init extends Contract {
                 "pass", tokenPass(GAS_DOMAIN, "user", password)
         ));
 
-        requestEquals("/mfm-exchange/spred.php", Map.of("domain", "bee_nest"));
+        requestEquals("/mfm-exchange/spred", Map.of("domain", "bee_nest"));
 
-        delegateBalanceToScript(GAS_DOMAIN, GAS_OWNER, "bank", "mfm-bank/owner.php", password);
+        delegateBalanceToScript(GAS_DOMAIN, GAS_OWNER, "bank", "mfm-bank/owner", password);
 
         String htaccess = fileGetContents("/mfm-root/.htaccess");
         filePutContents("/.htaccess", htaccess);

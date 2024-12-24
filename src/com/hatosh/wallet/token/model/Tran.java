@@ -6,7 +6,7 @@ import com.metabrain.gdb.utils.Bytes;
 
 import java.io.ByteArrayOutputStream;
 
-public class Transaction implements BigArrayCell {
+public class Tran implements BigArrayCell {
     public String domain;
     public String from;
     public String to;
@@ -18,18 +18,18 @@ public class Transaction implements BigArrayCell {
     public String delegate;
     public Long time;
 
-    public Transaction() {
+    public Tran() {
     }
 
-    public Transaction(String domain,
-                       String from,
-                       String to,
-                       Double amount,
-                       Double fee,
-                       String key,
-                       String next_hash,
-                       String delegate,
-                       Long time) {
+    public Tran(String domain,
+                String from,
+                String to,
+                Double amount,
+                Double fee,
+                String key,
+                String next_hash,
+                String delegate,
+                Long time) {
         this.domain = domain;
         this.from = from;
         this.to = to;

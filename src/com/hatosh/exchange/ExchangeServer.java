@@ -1,11 +1,9 @@
 package com.hatosh.exchange;
 
-import com.hatosh.servers.FtpServer;
 import com.hatosh.servers.model.Endpoint;
 import com.hatosh.servers.model.Subscription;
-import com.hatosh.telegram.TelegramRedirector;
 import com.hatosh.wallet.Node;
-import com.hatosh.wallet.token.model.Transaction;
+import com.hatosh.wallet.token.model.Tran;
 
 import java.io.IOException;
 import java.util.Map;
@@ -25,20 +23,16 @@ public class ExchangeServer extends Node {
     @Override
     public Endpoint getEndpoint(String uri) {
         switch (uri) {
-            case "mfm-exchange/place.php":
+            case "mfm-exchange/place":
                 return new Place();
-            case "mfm-exchange/cancel.php":
+            case "mfm-exchange/cancel":
                 return new Cancel();
-            case "mfm-exchange/orderbook.php":
+            case "mfm-exchange/orderbook":
                 return new OrderBook();
-            case "mfm-exchange/orders.php":
+            case "mfm-exchange/orders":
                 return new Orders();
         }
         return super.getEndpoint(uri);
-    }
-
-    public static void onTranSuccess(Transaction tran) {
-        // place if prefix is == site_domain
     }
 
     @Override

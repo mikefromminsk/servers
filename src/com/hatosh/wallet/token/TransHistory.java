@@ -1,6 +1,6 @@
 package com.hatosh.wallet.token;
 
-import com.hatosh.wallet.token.model.Transaction;
+import com.hatosh.wallet.token.model.Tran;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +8,12 @@ import java.util.List;
 public class TransHistory extends TokenUtils {
     @Override
     public void run() {
-        List<Transaction> trans = new ArrayList<>();
-        for (int i = 0; i < transHistory.size(); i++)
-            trans.add(transHistory.get(i));
+        Long page = getLongRequired("page");
+        Long size = getLongRequired("size");
+        List<Tran> trans = new ArrayList<>();
+        for (int i = 0; i < size && i < transHistory.size(); i++)
+            trans.add(transHistory.get(page * size + i));
         response.put("trans", trans);
+        response.put("trans_count", transHistory.size());
     }
 }

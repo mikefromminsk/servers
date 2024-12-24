@@ -1,8 +1,9 @@
-package com.hatosh.servers;
+package com.hatosh.wallet;
 
 import com.google.gson.Gson;
-import com.hatosh.exchange.Spred;
+import com.hatosh.servers.model.Message;
 import com.hatosh.servers.model.Subscription;
+import com.hatosh.utils.Request;
 import com.hatosh.utils.SSLContextBuilder;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -15,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static com.hatosh.wallet.Utils.getPortOffset;
+import static com.hatosh.wallet.Utils.gson;
 
 
 public class WssServer extends WebSocketServer {
@@ -74,6 +76,22 @@ public class WssServer extends WebSocketServer {
     public void onStart() {
         System.out.println(this.getClass().getSimpleName() + " started on " + getPort());
         setConnectionLostTimeout(100);
+    }
+
+    public void broadcast(String channel, Map<String, String> data) {
+        if (channels.containsKey(channel)) {
+            Iterator<WebSocket> iterator = channels.get(channel).iterator();
+            Set<WebSocket> activeSubscribers = new HashSet<>();
+            while (iterator.hasNext()) {
+                WebSocket conn = iterator.next();
+                if (conn.isOpen()) {
+                    activeSubscribers.add(conn);
+                } else {
+                    iterator.remove();
+                }
+            }
+            super.broadcast(gson.toJson(new Message(channel, data)), activeSubscribers);
+        }
     }
 
     public interface Callback {
