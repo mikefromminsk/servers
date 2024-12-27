@@ -3,14 +3,13 @@ package com.hatosh.exchange;
 import com.hatosh.servers.model.Endpoint;
 import com.hatosh.servers.model.Subscription;
 import com.hatosh.wallet.Node;
-import com.hatosh.wallet.token.model.Tran;
 
 import java.io.IOException;
 import java.util.Map;
 
 public class ExchangeServer extends Node {
 
-    Map<String, Spred> bots = new java.util.HashMap<>();
+    Map<String, Bot> bots = new java.util.HashMap<>();
     public ExchangeServer(String domain, String masterNode) {
         super(domain, masterNode);
     }
@@ -40,7 +39,7 @@ public class ExchangeServer extends Node {
         super.onMessage(sub);
         String[] topic = sub.subscribe.split(":");
         if (topic[0].equals("orderbook"))
-            bots.computeIfAbsent(topic[1], k -> new Spred(k)).refreshTimers();
+            bots.computeIfAbsent(topic[1], k -> new Bot(k)).refreshTimers();
     }
 
 

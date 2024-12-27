@@ -19,8 +19,8 @@ public class OrderBook extends ExchangeUtils{
     @Override
     public void run() {
         String domain = getRequired("domain");
-        List<PriceLevel> sellLevels = getPriceLevels(domain, 1, 6);
-        List<PriceLevel> buyLevels = getPriceLevels(domain, 0, 6);
+        List<PriceLevel> sellLevels = getPriceLevels(domain, true, 6);
+        List<PriceLevel> buyLevels = getPriceLevels(domain, false, 6);
 
         fillAdditionalData(sellLevels);
         fillAdditionalData(buyLevels);

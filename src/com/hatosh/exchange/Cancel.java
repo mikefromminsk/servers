@@ -1,6 +1,6 @@
 package com.hatosh.exchange;
 
-public class Cancel extends ExchangeUtils{
+public class Cancel extends ExchangeUtils {
 
     @Override
     public void run() {

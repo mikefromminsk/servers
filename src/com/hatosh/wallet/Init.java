@@ -6,36 +6,38 @@ import com.hatosh.wallet.data.Contract;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.hatosh.exchange.BotUtils.BOT_PREFIX;
+
 public class Init extends Contract {
 
     class Distribution {
         String domain;
         Long supply;
-        Long mining;
-        Long exchange;
+        int miningPercent;
+        int exchangePercent;
 
-        Distribution(String domain, Long supply, Long mining, Long exchange) {
+        public Distribution(String domain, Long supply, int miningPercent, int exchangePercent) {
             this.domain = domain;
             this.supply = supply;
-            this.mining = mining;
-            this.exchange = exchange;
+            this.miningPercent = miningPercent;
+            this.exchangePercent = exchangePercent;
         }
     }
 
     private void launchList(List<Distribution> tokens, String password) {
         for (Distribution token : tokens) {
             tokenRegToken(token.domain, GAS_OWNER, password, token.supply);
-            if (token.exchange > 0) {
-                String botAddress = "bot_spred_" + token.domain;
+            if (token.exchangePercent > 0) {
+                String botAddress = BOT_PREFIX + token.domain;
                 botScriptReg(token.domain, botAddress);
-                tokenSendAndCommit(token.domain, GAS_OWNER, botAddress, round(token.supply * token.exchange / 100.0, 2),
+                tokenSendAndCommit(token.domain, GAS_OWNER, botAddress, round(token.supply * token.exchangePercent / 100.0),
                         tokenPass(token.domain, GAS_OWNER, password), null);
-                tokenSendAndCommit(GAS_DOMAIN, GAS_OWNER, botAddress, token.exchange,
+                tokenSendAndCommit(GAS_DOMAIN, GAS_OWNER, botAddress, 100,
                         tokenPass(GAS_DOMAIN, GAS_OWNER, password), null);
             }
-            if (token.mining > 0) {
+            if (token.miningPercent > 0) {
                 tokenRegScript(token.domain, "mining", "mfm-mining/mint");
-                tokenSendAndCommit(token.domain, GAS_OWNER, "mining", round(token.supply * token.mining / 100.0, 2),
+                tokenSendAndCommit(token.domain, GAS_OWNER, "mining", round(token.supply * token.miningPercent / 100.0),
                         tokenPass(token.domain, GAS_OWNER, password), null);
             }
             /*if (token.staking > 0) {
@@ -56,12 +58,12 @@ public class Init extends Contract {
         //trackFill(GAS_DOMAIN, 1, 1);
 
         List<Distribution> tokens = Arrays.asList(
-                new Distribution("diamond", 100_000L, 100L, 0L),
-                new Distribution("gold", 1_000_000L, 100L, 0L),
-                new Distribution("redstone", 5_000_000L, 100L, 0L),
-                new Distribution("iron", 100_000_000L, 100L, 0L),
-                new Distribution("bee_nest", 1_000_000L, 0L, 90L),
-                new Distribution("emerald", 1_000_000L, 0L, 100L)
+                new Distribution("gold", 1_000_000L, 90, 10),
+                new Distribution("diamond", 100_000L, 100, 0),
+                new Distribution("redstone", 5_000_000L, 100, 0),
+                new Distribution("iron", 100_000_000L, 100, 0),
+                new Distribution("bee_nest", 1_000_000L, 0, 90),
+                new Distribution("emerald", 1_000_000L, 0, 100)
         );
 
         launchList(tokens, password);

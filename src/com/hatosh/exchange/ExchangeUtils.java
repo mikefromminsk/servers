@@ -1,6 +1,5 @@
 package com.hatosh.exchange;
 
-import com.hatosh.wallet.analytics.AnalyticsUtils;
 import com.hatosh.wallet.token.TokenRequests;
 import com.hatosh.wallet.token.model.Token;
 
@@ -15,46 +14,48 @@ import static com.hatosh.wallet.data.Contract.GAS_DOMAIN;
 
 public abstract class ExchangeUtils extends TokenRequests {
 
+    public static final String EXCHANGE_PREFIX = "exchange_";
+
     private static final Map<Long, Order> allOrders = new HashMap<>();
     private final Map<Long, Order> orders = new HashMap<>();
 
     public void place(String domain, String address, long isSell, double price, double amount, double total, String pass) {
-        String exchangeAddress = "exchange_" + domain;
+        String exchangeAddress = EXCHANGE_PREFIX + domain;
         if (botScriptReg(domain, exchangeAddress)) commitAccounts();
 
-        if (price != round(price, 2)) error("price tick is 0.01");
+        if (price != round(price)) error("price tick is 0.01");
         if (price <= 0) error("price less than 0");
-        if (amount != round(amount, 2)) error("amount tick is 0.01");
+        if (amount != round(amount)) error("amount tick is 0.01");
         if (amount <= 0) error("amount less than 0");
 
         if (isSell == 1) {
-            total = round(price * amount, 2);
+            total = round(price * amount);
             orderFillSell(address, domain, price, amount, total, pass);
         } else {
-            amount = round(total / price, 2);
+            amount = round(total / price);
             orderFillBuy(address, domain, price, amount, total, pass);
         }
     }
 
     public long createOrder(String address, String domain, int isSell, double price, double amount, double total) {
         Order order = new Order();
-        order.orderId = random.nextLong();
+        order.order_id = random();
         order.address = address;
         order.domain = domain;
-        order.isSell = isSell;
+        order.is_sell = isSell;
         order.price = price;
         order.amount = amount;
         order.total = total;
         order.status = 2;
         order.timestamp = time();
-        orders.put(order.orderId, order);
-        return order.orderId;
+        orders.put(order.order_id, order);
+        return order.order_id;
     }
 
     private List<Order> getOrders(String domain, int isSell, double price, boolean isBuy) {
         List<Order> result = new ArrayList<>();
         for (Order order : allOrders.values()) {
-            if (order.domain.equals(domain) && order.isSell == isSell && order.status == 0) {
+            if (order.domain.equals(domain) && order.is_sell == isSell && order.status == 0) {
                 if (isBuy ? order.price <= price : order.price >= price) {
                     result.add(order);
                 }
@@ -65,7 +66,7 @@ public abstract class ExchangeUtils extends TokenRequests {
     }
 
     public void orderFillSell(String address, String domain, double price, double amount, double total, String pass) {
-        String exchangeAddress = "exchange_" + domain;
+        String exchangeAddress = EXCHANGE_PREFIX + domain;
         tokenSend(scriptPath, domain, address, exchangeAddress, amount, pass, null);
         long orderId = createOrder(address, domain, 1, price, amount, total);
         double tradeVolume = 0;
@@ -73,27 +74,27 @@ public abstract class ExchangeUtils extends TokenRequests {
 
         for (Order order : getOrders(domain, 0, price, false)) {
             Order newOrder = orders.get(orderId);
-            double amountNotFilled = round(newOrder.amount - newOrder.amountFilled, 2);
+            double amountNotFilled = round(newOrder.amount - newOrder.amount_filled);
             if (amountNotFilled == 0) break;
-            double orderTotalNotFilled = round(order.total - order.totalFilled, 2);
-            double orderAmountNotFilled = round(orderTotalNotFilled / order.price, 2);
+            double orderTotalNotFilled = round(order.total - order.total_filled);
+            double orderAmountNotFilled = round(orderTotalNotFilled / order.price);
             double amountToFill = Math.min(orderAmountNotFilled, amountNotFilled);
-            double totalToFill = round(amountToFill * order.price, 2);
+            double totalToFill = round(amountToFill * order.price);
 
-            updateOrder(order.orderId, order.amountFilled + amountToFill, order.totalFilled + totalToFill, orderAmountNotFilled == amountToFill ? 1 : 0);
+            updateOrder(order.order_id, order.amount_filled + amountToFill, order.total_filled + totalToFill, orderAmountNotFilled == amountToFill ? 1 : 0);
             if (orderAmountNotFilled == amountToFill) {
-                double amountFilled = allOrders.get(order.orderId).amountFilled;
+                double amountFilled = allOrders.get(order.order_id).amount_filled;
                 tokenSend(scriptPath, domain, exchangeAddress, order.address, amountFilled, tokenPass(domain, exchangeAddress), null);
             }
 
-            updateOrder(orderId, newOrder.amountFilled + amountToFill, newOrder.totalFilled + totalToFill, 0);
+            updateOrder(orderId, newOrder.amount_filled + amountToFill, newOrder.total_filled + totalToFill, 0);
             lastTradePrice = order.price;
             tradeVolume += totalToFill;
         }
 
         Order newOrder = orders.get(orderId);
-        if (newOrder.amount == newOrder.amountFilled) {
-            tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, address, round(newOrder.totalFilled, 2), tokenPass(GAS_DOMAIN, exchangeAddress), null);
+        if (newOrder.amount == newOrder.amount_filled) {
+            tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, address, round(newOrder.total_filled), tokenPass(GAS_DOMAIN, exchangeAddress), null);
             updateOrder(orderId, 1);
         } else {
             updateOrder(orderId, 0);
@@ -103,7 +104,7 @@ public abstract class ExchangeUtils extends TokenRequests {
     }
 
     public void orderFillBuy(String address, String domain, double price, double amount, double total, String pass) {
-        String exchangeAddress = "exchange_" + domain;
+        String exchangeAddress = EXCHANGE_PREFIX + domain;
         tokenSend(scriptPath, GAS_DOMAIN, address, exchangeAddress, total, pass, null);
         long orderId = createOrder(address, domain, 0, price, amount, total);
         double tradeVolume = 0;
@@ -111,29 +112,29 @@ public abstract class ExchangeUtils extends TokenRequests {
 
         for (Order order : getOrders(domain, 1, price, true)) {
             Order newOrder = orders.get(orderId);
-            double totalNotFilled = round(newOrder.total - newOrder.totalFilled, 2);
+            double totalNotFilled = round(newOrder.total - newOrder.total_filled);
             if (totalNotFilled == 0) break;
-            double orderAmountNotFilled = round(order.amount - order.amountFilled, 2);
-            double orderTotalNotFilled = round(orderAmountNotFilled * order.price, 2);
+            double orderAmountNotFilled = round(order.amount - order.amount_filled);
+            double orderTotalNotFilled = round(orderAmountNotFilled * order.price);
             double totalToFill = Math.min(orderTotalNotFilled, totalNotFilled);
-            double amountToFill = round(totalToFill / order.price, 2);
+            double amountToFill = round(totalToFill / order.price);
 
-            if (order.amountFilled + amountToFill < 0)
-                error("amount filled less than 0 " + order.amountFilled + " " + amountToFill);
-            updateOrder(order.orderId, order.amountFilled + amountToFill, order.totalFilled + totalToFill, orderTotalNotFilled == totalToFill ? 1 : 0);
+            if (order.amount_filled + amountToFill < 0)
+                error("amount filled less than 0 " + order.amount_filled + " " + amountToFill);
+            updateOrder(order.order_id, order.amount_filled + amountToFill, order.total_filled + totalToFill, orderTotalNotFilled == totalToFill ? 1 : 0);
             if (orderTotalNotFilled == totalToFill) {
-                double totalFilled = allOrders.get(order.orderId).totalFilled;
+                double totalFilled = allOrders.get(order.order_id).total_filled;
                 tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalFilled, tokenPass(GAS_DOMAIN, exchangeAddress), null);
             }
 
-            updateOrder(orderId, newOrder.amountFilled + amountToFill, newOrder.totalFilled + totalToFill, 0);
+            updateOrder(orderId, newOrder.amount_filled + amountToFill, newOrder.total_filled + totalToFill, 0);
             lastTradePrice = order.price;
             tradeVolume += totalToFill;
         }
 
         Order newOrder = orders.get(orderId);
-        if (newOrder.total == newOrder.totalFilled) {
-            tokenSend(scriptPath, domain, exchangeAddress, address, round(newOrder.amountFilled, 2), tokenPass(domain, exchangeAddress), null);
+        if (newOrder.total == newOrder.total_filled) {
+            tokenSend(scriptPath, domain, exchangeAddress, address, round(newOrder.amount_filled), tokenPass(domain, exchangeAddress), null);
             updateOrder(orderId, 1);
         } else {
             updateOrder(orderId, 0);
@@ -161,22 +162,23 @@ public abstract class ExchangeUtils extends TokenRequests {
     }
 
     public void cancel(long orderId) {
+        scriptPath = null; // temporary fix
         Order order = orders.get(orderId);
         if (order == null) {
             order = allOrders.get(orderId);
         }
         if (order.status != 0) error("order already finished");
-        String exchangeAddress = "exchange_" + order.domain;
-        if (order.isSell == 1) {
-            double amountToGet = round(order.amount - order.amountFilled, 2);
-            double totalToGet = round(order.totalFilled, 2);
+        String exchangeAddress = EXCHANGE_PREFIX + order.domain;
+        if (order.is_sell == 1) {
+            double amountToGet = round(order.amount - order.amount_filled);
+            double totalToGet = round(order.total_filled);
             if (amountToGet > 0)
                 tokenSend(scriptPath, order.domain, exchangeAddress, order.address, amountToGet, tokenPass(order.domain, exchangeAddress), null);
             if (totalToGet > 0)
                 tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalToGet, tokenPass(GAS_DOMAIN, exchangeAddress), null);
         } else {
-            double totalToGet = round(order.total - order.totalFilled, 2);
-            double amountToGet = round(order.amountFilled, 2);
+            double totalToGet = round(order.total - order.total_filled);
+            double amountToGet = round(order.amount_filled);
             if (totalToGet > 0)
                 tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalToGet, tokenPass(GAS_DOMAIN, exchangeAddress), null);
             if (amountToGet > 0)
@@ -188,7 +190,7 @@ public abstract class ExchangeUtils extends TokenRequests {
     public void cancelAll(String domain, String address) {
         List<Order> orders = ordersActive(domain, address);
         for (Order order : orders) {
-            cancel(order.orderId);
+            cancel(order.order_id);
         }
     }
 
@@ -214,21 +216,31 @@ public abstract class ExchangeUtils extends TokenRequests {
         return result;
     }
 
-    public List<PriceLevel> getPriceLevels(String domain, int isSell, int count) {
-        List<PriceLevel> levels = new ArrayList<>();
+    public List<PriceLevel> getPriceLevels(String domain, boolean isSell, int count) {
+        Map<Double, PriceLevel> levels = new HashMap<>();
         for (Order order : allOrders.values()) {
-            if (order.domain.equals(domain) && order.isSell == isSell && order.status == 0) {
-                levels.add(new PriceLevel(order.price, order.amount - order.amountFilled));
+            if (order.domain.equals(domain) && order.is_sell == (isSell ? 1 : 0) && order.status == 0) {
+                if (levels.containsKey(order.price)) {
+                    PriceLevel level = levels.get(order.price);
+                    level.amount += order.amount - order.amount_filled;
+                } else {
+                    levels.put(order.price, new PriceLevel(order.price, order.amount - order.amount_filled));
+                }
             }
         }
-        levels.sort((o1, o2) -> isSell == 1 ? Double.compare(o1.price, o2.price) : Double.compare(o2.price, o1.price));
-        return levels.size() > count ? levels.subList(0, count) : levels;
+        List<PriceLevel> levelsList = new ArrayList<>(levels.values());
+        levelsList.sort((o1, o2) -> isSell ? Double.compare(o1.price, o2.price) : Double.compare(o2.price, o1.price));
+        return levelsList.size() > count ? levelsList.subList(0, count) : levelsList;
     }
 
     public void commit() {
         super.commit();
-        allOrders.putAll(orders);
-        orders.clear();
+        if (!orders.isEmpty()) {
+            allOrders.putAll(orders);
+            orders.clear();
+            String topic = "orderbook:" + getRequired("domain");
+            broadcast(topic, map("topic", topic));
+        }
     }
 
     private void updateOrder(long orderId, double amountFilled, double totalFilled, int status) {
@@ -237,8 +249,8 @@ public abstract class ExchangeUtils extends TokenRequests {
             order = allOrders.get(orderId).clone();
         }
         if (order != null) {
-            order.amountFilled = amountFilled;
-            order.totalFilled = totalFilled;
+            order.amount_filled = amountFilled;
+            order.total_filled = totalFilled;
             order.status = status;
             orders.put(orderId, order);
         }
@@ -256,34 +268,34 @@ public abstract class ExchangeUtils extends TokenRequests {
     }
 
     public class Order {
-        public long orderId;
+        public long order_id;
         public String address;
         public String domain;
-        public int isSell;
+        public int is_sell;
         public double price;
         public double amount;
         public double total;
         public int status;
         public long timestamp;
-        public double amountFilled;
-        public double totalFilled;
+        public double amount_filled;
+        public double total_filled;
 
         public Order() {
         }
 
         public Order clone() {
             Order order = new Order();
-            order.orderId = orderId;
+            order.order_id = order_id;
             order.address = address;
             order.domain = domain;
-            order.isSell = isSell;
+            order.is_sell = is_sell;
             order.price = price;
             order.amount = amount;
             order.total = total;
             order.status = status;
             order.timestamp = timestamp;
-            order.amountFilled = amountFilled;
-            order.totalFilled = totalFilled;
+            order.amount_filled = amount_filled;
+            order.total_filled = total_filled;
             return order;
         }
     }

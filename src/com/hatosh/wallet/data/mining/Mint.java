@@ -36,7 +36,7 @@ public class Mint extends Contract {
         hashNumber = hashNumber.mod(BigInteger.valueOf(difficulty));
 
         if (hashNumber.equals(BigInteger.ZERO)) {
-            double reward = round(tokenBalance(domain, "mining") * REWARD_MULTIPLIER, 2);
+            double reward = round(tokenBalance(domain, "mining") * REWARD_MULTIPLIER);
             tokenSend(scriptPath, domain, "mining", gasAddress, reward, tokenPass(domain, "mining", "mining"), null);
             DataRow lastHashRow = dataFindPath("mining/" + domain + "/last_hash", false);
             long interval = time() - (lastHashRow == null ? 0 : lastHashRow.time);

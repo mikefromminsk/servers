@@ -24,8 +24,16 @@ public class Utils {
         return MD5.hash(input);
     }
 
+    public static Double round(Double value) {
+        return round(value, 2);
+    }
+
     public static Double round(Double value, int precision) {
         return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
+    }
+
+    public static int random() {
+        return Math.abs(random.nextInt());
     }
 
     public static Long time() {

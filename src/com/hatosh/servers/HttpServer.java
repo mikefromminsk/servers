@@ -60,7 +60,6 @@ public abstract class HttpServer extends NanoHTTPD {
             printWriter.flush();
             LinkedList<String> stack = new LinkedList<>(Arrays.asList(writer.toString().split("\r\n\t")));
             stack.removeFirst();
-            stack.removeFirst();
             stack.removeLast();
             stack.removeLast();
             stack.removeLast();
