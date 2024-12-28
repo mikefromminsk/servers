@@ -1,7 +1,6 @@
 package com.hatosh.wallet.analytics;
 
 import com.hatosh.servers.model.Endpoint;
-import com.hatosh.wallet.Utils;
 import com.hatosh.wallet.analytics.model.Candle;
 import com.hatosh.wallet.analytics.model.Event;
 import com.hatosh.wallet.data.model.Field;
@@ -10,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AnalyticsUtils extends Endpoint {
-    static final Map<String, Long> defaultChartSettings = new HashMap<>();
+    static final Map<String, Long> periopdsSec = new HashMap<>();
     static final Map<String, List<Candle>> allCharts = new ConcurrentHashMap<>();
     static final Map<Integer, Event> allEvents = new ConcurrentHashMap<>();
     static final Map<String, List<Integer>> anvsEvents = new ConcurrentHashMap<>();
@@ -19,7 +18,7 @@ public abstract class AnalyticsUtils extends Endpoint {
     static final Map<String, List<Integer>> userEvents = new ConcurrentHashMap<>();
     static final Map<Integer, List<Field>> allObjects = new ConcurrentHashMap<>();
 
-    public Map<String, Double> liner = new ConcurrentHashMap<>();
+    public Map<String, Double> newCandles = new ConcurrentHashMap<>();
     public List<Event> events = new ArrayList<>();
     public Map<Integer, List<Field>> objects = new ConcurrentHashMap<>();
 
@@ -122,16 +121,15 @@ public abstract class AnalyticsUtils extends Endpoint {
         return object;
     }
 
-
     {
-        defaultChartSettings.put("M", 60L);
-        defaultChartSettings.put("H", 60L * 60);
-        defaultChartSettings.put("D", 60L * 60 * 24);
-        defaultChartSettings.put("W", 60L * 60 * 24 * 7);
+        periopdsSec.put("M", 60L);
+        periopdsSec.put("H", 60L * 60);
+        periopdsSec.put("D", 60L * 60 * 24);
+        periopdsSec.put("W", 60L * 60 * 24 * 7);
     }
 
     public void trackLinear(String key, double value) {
-        liner.put(key, value);
+        newCandles.put(key, value);
     }
 
     public void trackAccumulate(String key) {
@@ -143,25 +141,24 @@ public abstract class AnalyticsUtils extends Endpoint {
     }
 
     void commitCharts() {
-        for (String key : liner.keySet()) {
+        for (String key : newCandles.keySet()) {
             long timestamp = time();
-            Double value = liner.get(key);
-            for (String period_name: defaultChartSettings.keySet()) {
-                long period = defaultChartSettings.get(period_name);
+            Double value = newCandles.get(key);
+            for (String period_name: periopdsSec.keySet()) {
+                long period = periopdsSec.get(period_name);
                 Candle last_candle = null;
                 List<Candle> chart = allCharts.get(key + period_name);
                 if (chart != null) {
                     last_candle = chart.get(chart.size() - 1);
                 }
-                long period_time = ((timestamp / period)) * period;
-                if (last_candle == null || period_time != last_candle.period_time) {
+                long period_time = (timestamp / period) * period;
+                if (last_candle == null || period_time != last_candle.time) {
                     Candle candle = new Candle();
-                    candle.key = key;
-                    candle.period_name = period_name;
-                    candle.period_time = period_time;
+                    candle.period = period_name;
+                    candle.time = period_time;
                     candle.low = value;
                     candle.high = value;
-                    candle.open = value;
+                    candle.open = getCandleLastValue(key);
                     candle.close = value;
                     allCharts.computeIfAbsent(key + period_name, k -> new ArrayList<>()).add(candle);
                 } else {
@@ -175,25 +172,26 @@ public abstract class AnalyticsUtils extends Endpoint {
 
     public List<Candle> getCandles(String key, String periodName, int count) {
         List<Candle> chart = allCharts.get(key + periodName);
-        long period = defaultChartSettings.get(periodName);
+        long period = periopdsSec.get(periodName);
         return optimizeCandles(chart, period, count);
     }
 
-    public List<Candle> optimizeCandles(List<Candle> chart, long period, int count) {
+    public List<Candle> optimizeCandles(List<Candle> chart, long periodSec, int count) {
         if (chart == null || chart.isEmpty()) return Collections.emptyList();
         Candle firstCandle = chart.get(0);
         Candle lastCandle = chart.get(chart.size() - 1);
         Map<Long, Candle> candlesMap = new HashMap<>();
         for (Candle candle : chart)
-            candlesMap.put(candle.period_time, candle);
+            candlesMap.put(candle.time, candle);
         List<Candle> result = new ArrayList<>();
         double lastClose = lastCandle.close;
-        long periodTime = (time() / period) * period;
-        for (long i = periodTime; i >= firstCandle.period_time && result.size() < count; i -= period) {
+        long timestamp = time();
+        long periodTime = (timestamp / periodSec) * periodSec;
+        for (long i = periodTime; i >= firstCandle.time && result.size() < count; i -= periodSec) {
             Candle item = candlesMap.get(i);
             if (item == null) {
                 Candle newCandle = new Candle();
-                newCandle.period_time = (int) i;
+                newCandle.time = (int) i;
                 newCandle.low = lastClose;
                 newCandle.high = lastClose;
                 newCandle.open = lastClose;
@@ -211,7 +209,11 @@ public abstract class AnalyticsUtils extends Endpoint {
     public List<Candle> getAccumulate(String key, String periodName, int count) {
         List<Candle> candles = getCandles(key, periodName, count);
         for (Candle candle : candles) {
-            candle.value = candle.close - candle.open;
+            candle.open = round(candle.open);
+            candle.close = round(candle.close);
+            candle.high = round(candle.high);
+            candle.low = round(candle.low);
+            candle.value = round(candle.close - candle.open);
         }
         return candles;
     }

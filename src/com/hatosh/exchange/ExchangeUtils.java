@@ -19,6 +19,29 @@ public abstract class ExchangeUtils extends TokenRequests {
     private static final Map<Long, Order> allOrders = new HashMap<>();
     private final Map<Long, Order> orders = new HashMap<>();
 
+    void placeAndCommit(String domain,
+                        String address,
+                        boolean isSell,
+                        double price,
+                        double amount,
+                        double total,
+                        String pass) {
+        try {
+            Place place = new Place();
+            place.params = map(
+                    "domain", domain,
+                    "address", address,
+                    "is_sell", "" + (isSell ? 1 : 0),
+                    "price", "" + price,
+                    "amount", "" + amount,
+                    "total", "" + total,
+                    "pass", pass);
+            place.run();
+            place.commit();
+        } catch (Exception e) {
+        }
+    }
+
     public void place(String domain, String address, long isSell, double price, double amount, double total, String pass) {
         String exchangeAddress = EXCHANGE_PREFIX + domain;
         if (botScriptReg(domain, exchangeAddress)) commitAccounts();
@@ -83,7 +106,7 @@ public abstract class ExchangeUtils extends TokenRequests {
 
             updateOrder(order.order_id, order.amount_filled + amountToFill, order.total_filled + totalToFill, orderAmountNotFilled == amountToFill ? 1 : 0);
             if (orderAmountNotFilled == amountToFill) {
-                double amountFilled = allOrders.get(order.order_id).amount_filled;
+                double amountFilled = getOrder(order.order_id).amount_filled;
                 tokenSend(scriptPath, domain, exchangeAddress, order.address, amountFilled, tokenPass(domain, exchangeAddress), null);
             }
 
@@ -123,7 +146,7 @@ public abstract class ExchangeUtils extends TokenRequests {
                 error("amount filled less than 0 " + order.amount_filled + " " + amountToFill);
             updateOrder(order.order_id, order.amount_filled + amountToFill, order.total_filled + totalToFill, orderTotalNotFilled == totalToFill ? 1 : 0);
             if (orderTotalNotFilled == totalToFill) {
-                double totalFilled = allOrders.get(order.order_id).total_filled;
+                double totalFilled = getOrder(order.order_id).total_filled;
                 tokenSend(scriptPath, GAS_DOMAIN, exchangeAddress, order.address, totalFilled, tokenPass(GAS_DOMAIN, exchangeAddress), null);
             }
 
@@ -163,10 +186,7 @@ public abstract class ExchangeUtils extends TokenRequests {
 
     public void cancel(long orderId) {
         scriptPath = null; // temporary fix
-        Order order = orders.get(orderId);
-        if (order == null) {
-            order = allOrders.get(orderId);
-        }
+        Order order = getOrder(orderId);
         if (order.status != 0) error("order already finished");
         String exchangeAddress = EXCHANGE_PREFIX + order.domain;
         if (order.is_sell == 1) {
@@ -190,7 +210,22 @@ public abstract class ExchangeUtils extends TokenRequests {
     public void cancelAll(String domain, String address) {
         List<Order> orders = ordersActive(domain, address);
         for (Order order : orders) {
-            cancel(order.order_id);
+            try {
+                cancel(order.order_id);
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public void cancelAllAndCommit(String domain, String address) {
+        try {
+            CancelAll cancelAll = new CancelAll();
+            cancelAll.run(null, map(
+                    "domain", domain,
+                    "address", address
+            ));
+            cancelAll.commit();
+        } catch (Exception e) {
         }
     }
 
@@ -235,19 +270,22 @@ public abstract class ExchangeUtils extends TokenRequests {
 
     public void commit() {
         super.commit();
-        if (!orders.isEmpty()) {
+        if (orders.size() > 0) {
             allOrders.putAll(orders);
             orders.clear();
-            String topic = "orderbook:" + getRequired("domain");
-            broadcast(topic, map("topic", topic));
         }
     }
 
-    private void updateOrder(long orderId, double amountFilled, double totalFilled, int status) {
+    private Order getOrder(long orderId) {
         Order order = orders.get(orderId);
         if (order == null) {
-            order = allOrders.get(orderId).clone();
+            order = allOrders.get(orderId);
         }
+        return order;
+    }
+
+    private void updateOrder(long orderId, double amountFilled, double totalFilled, int status) {
+        Order order = getOrder(orderId);
         if (order != null) {
             order.amount_filled = amountFilled;
             order.total_filled = totalFilled;
@@ -257,10 +295,7 @@ public abstract class ExchangeUtils extends TokenRequests {
     }
 
     private void updateOrder(long orderId, int status) {
-        Order order = orders.get(orderId);
-        if (order == null) {
-            order = allOrders.get(orderId);
-        }
+        Order order = getOrder(orderId);
         if (order != null) {
             order.status = status;
             orders.put(orderId, order);

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.Random;
 
 import static com.hatosh.wallet.data.mining.Miner.hashMod;
@@ -75,5 +76,9 @@ public class Utils {
         sc.init(null, trustAllCertificates, new java.security.SecureRandom());
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+    }
+
+    public Double last(List<Double> list) {
+        return list.get(list.size() - 1);
     }
 }

@@ -12,7 +12,9 @@ public class OrderBook extends ExchangeUtils{
         double accumulateAmount = 0;
         for (PriceLevel level : levels) {
             accumulateAmount += level.amount;
-            level.percent = accumulateAmount / sum * 100;
+            level.price = round(level.price);
+            level.amount = round(level.amount);
+            level.percent = round(accumulateAmount / sum * 100);
         }
     }
 

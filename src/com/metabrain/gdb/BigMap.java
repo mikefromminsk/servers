@@ -11,7 +11,7 @@ import java.util.Map;
 public class BigMap<Val extends BigArrayCell> {
     private final BigArray<KeyVal> keys;
     private final BigArray<Hash> hashes;
-    private final BigArray<Val> values;
+    public final BigArray<Val> values;
     private final Map<String, Val> cache = new HashMap<>();
 
     public BigMap(String infinityFileID, Class<Val> valClass) {

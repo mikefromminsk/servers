@@ -7,8 +7,8 @@ public class InfiniteTimer {
 
     Timer timer;
     Callback callback;
-    int periodMs;
-    int stopAfterMs;
+    public final int periodMs;
+    public final int stopAfterMs;
     long lastRestart = 0;
 
     public InfiniteTimer(Callback callback, int periodMs, int stopAfterMs) {
@@ -30,9 +30,9 @@ public class InfiniteTimer {
             @Override
             public void run() {
                 if (System.currentTimeMillis() - lastRestart < stopAfterMs) {
-                    try{
-                        callback.onTimer();
-                    } catch (Exception e){
+                    try {
+                        callback.onTimer(InfiniteTimer.this);
+                    } catch (Exception e) {
                         System.out.println("error: " + e.getMessage());
                     }
                 } else {
@@ -48,7 +48,7 @@ public class InfiniteTimer {
         start();
     }
 
-    public interface Callback{
-        void onTimer();
+    public interface Callback {
+        void onTimer(InfiniteTimer timer);
     }
 }

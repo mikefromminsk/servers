@@ -1,5 +1,9 @@
 package com.hatosh.exchange;
 
+import static com.hatosh.exchange.BotUtils.BOT_PREFIX;
+import static com.hatosh.utils.Params.map;
+import static com.hatosh.wallet.Node.broadcast;
+
 public class Place extends ExchangeUtils {
     @Override
     public void run() {
@@ -16,9 +20,9 @@ public class Place extends ExchangeUtils {
 
         place(domain, address, is_sell, price, amount, total, pass);
 
-        /*if (strpos(address, "bot_") == = FALSE) {
-            topic = orderbook.":".domain;
-            broadcast(topic,[ topic = > topic, ]);
-        }*/
+        if (address.indexOf(BOT_PREFIX) != 0) {
+            String topic = "orderbook:" + getRequired("domain");
+            broadcast(topic, map("topic", topic));
+        }
     }
 }

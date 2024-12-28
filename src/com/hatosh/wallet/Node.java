@@ -1,5 +1,6 @@
 package com.hatosh.wallet;
 
+import com.hatosh.exchange.CancelAll;
 import com.hatosh.servers.HttpServer;
 import com.hatosh.servers.model.Endpoint;
 import com.hatosh.servers.model.Subscription;
@@ -15,6 +16,7 @@ import com.hatosh.wallet.data.mining.Mint;
 import com.hatosh.wallet.data.wallet.Main;
 import com.hatosh.wallet.token.*;
 import com.hatosh.wallet.token.model.Tran;
+import com.hatosh.wallet.token.tests.SumTokens;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -147,6 +149,10 @@ public class Node extends HttpServer implements WssServer.Callback {
                 return new Info();
             case "mfm-wallet/home/api/main":
                 return new Main();
+            case "mfm-exchange/sum_tokens":
+                return new SumTokens();
+            case "mfm-exchange/cancel_all":
+                return new CancelAll();
         }
         return null;
     }

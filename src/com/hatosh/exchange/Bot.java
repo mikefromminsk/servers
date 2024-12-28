@@ -9,66 +9,40 @@ import static com.hatosh.wallet.Node.broadcast;
 import static com.hatosh.wallet.data.Contract.GAS_DOMAIN;
 import static com.hatosh.utils.Params.map;
 
-public class Bot extends BotUtils implements InfiniteTimer.Callback {
+public class Bot extends BotUtils {
 
-    private final String domain;
+    private String domain;
+    private String botAddress;
     private final InfiniteTimer secTimer;
     private final InfiniteTimer minTimer;
-    private final InfiniteTimer dayTimer;
 
     public Bot(String domain) {
         this.domain = domain;
-        secTimer = new InfiniteTimer(this, 1000, 1000 * 2);
-        minTimer = new InfiniteTimer(this, 1000 * 60, 1000 * 60 * 60 * 24);
-        dayTimer = new InfiniteTimer(this, 1000 * 60 * 60 * 24, 1000 * 60 * 60 * 24 * 7);
+        this.botAddress = BOT_PREFIX + domain;
+        if (botScriptReg(domain, botAddress)) commitAccounts();
+        secTimer = new InfiniteTimer(secBot, 1000, 1000 * 60 * 5);
+        minTimer = new InfiniteTimer(secBot, 1000 * 60, 1000 * 60 * 60 * 24 * 7);
     }
 
     public void refreshTimers() {
         secTimer.restart();
         minTimer.restart();
-        dayTimer.restart();
     }
 
-    @Override
-    public void onTimer() {
-        String botAddress = BOT_PREFIX + domain;
-
-        if (botScriptReg(domain, botAddress)) commitAccounts();
-
-        double coinBalance = tokenBalance(domain, botAddress);
+    InfiniteTimer.Callback secBot = (timer) -> {
+        params.put("domain", domain);
+        double volatility = timer.periodMs == 1000 ? 0.01 : 0.02;
+        boolean isSell = random() % 2 == 0;
+        double price = round(tokenPrice(domain) * (1 + (isSell ? -1 : 1) * volatility));
         double gasBalance = tokenBalance(GAS_DOMAIN, botAddress);
+        double needPrice = round(gasBalance / 100);
+        price = price + (needPrice - price) * 0.1;
+        cancelAllAndCommit(domain, botAddress);
+        fillOrderbook(domain, price, 3, 3, 7);
+        commit();
 
-        if (coinBalance < 5 || gasBalance < 5) {
-            cancelAll(domain, botAddress);
-            error("cancel all");
-        }
-
-        List<PriceLevel> sellPriceLevels = getPriceLevels(domain, true, 20);
-        List<PriceLevel> buyPriceLevels = getPriceLevels(domain, false, 20);
-
-        if (!sellPriceLevels.isEmpty() && !buyPriceLevels.isEmpty()) {
-            boolean isSell = new Random().nextInt((int) (coinBalance * 100 + gasBalance * 100)) <= coinBalance * 100;
-            double price = round(tokenPrice(domain) * (isSell ? 0.97 : 1.03));
-            double amount = round(1 / price);
-            placeAndCommit(domain,
-                    botAddress,
-                    isSell,
-                    price,
-                    amount,
-                    amount * price,
-                    isSell ? tokenPass(domain, botAddress) : tokenPass(GAS_DOMAIN, botAddress));
-        }
-
-        // calc token need price
-        double bestSellPrice = !sellPriceLevels.isEmpty() ? sellPriceLevels.get(0).price : 0;
-        double bestBuyPrice = !buyPriceLevels.isEmpty() ? buyPriceLevels.get(0).price : 0;
-        double tokenPrice = bestSellPrice == 0 || bestBuyPrice == 0 ? Math.max(bestSellPrice, bestBuyPrice) : (bestSellPrice + bestBuyPrice) / 2;
-        tokenPrice = tokenPrice == 0 ? 1 : tokenPrice;
-
-        fillOrderbook(domain, tokenPrice, 3, 3, 6);
-        fillOrderbook(domain, tokenPrice, 300, 50, 5);
-
-    }
-
+        String topic = "orderbook:" + getRequired("domain");
+        broadcast(topic, map("topic", topic));
+    };
 
 }
