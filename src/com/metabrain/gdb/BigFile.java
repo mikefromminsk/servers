@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
-import static com.hatosh.wallet.Utils.time;
-
 public class BigFile {
 
     final long BLOCK_SIZE = 4096 * 1024;
@@ -18,7 +16,7 @@ public class BigFile {
     public ArrayList<RandomAccessFile> blocks = new ArrayList<>();
 
     public BigFile(String fileName) {
-        this.fileName = fileName + time();
+        this.fileName = fileName;
         getFile(0);
     }
 
