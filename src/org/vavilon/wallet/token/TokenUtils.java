@@ -1,7 +1,7 @@
 package org.vavilon.wallet.token;
 
 import com.google.gson.reflect.TypeToken;
-import org.vavilon.wallet.analytics.AnalyticsUtils;
+import org.vavilon.analytics.AnalyticsUtils;
 import org.vavilon.wallet.token.model.Token;
 import org.vavilon.wallet.token.model.Tran;
 
@@ -97,13 +97,6 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public synchronized void commitTrans() {
         Collections.reverse(transactionsNew);
         for (Tran tran : transactionsNew) {
-            Account account = getAccount(tran.domain, tran.from);
-            tran.prev_hash = account.next_hash;
-            account.next_hash = tran.next_hash;
-            if (tran.prev_hash.equals(account.next_hash)){
-                System.out.println();
-            }
-            setAccount(account);
             transByHash.put(tran.next_hash, tran);
             transHistory.add(tran);
             Map<String, String> map = gson.fromJson(gson.toJson(tran), new TypeToken<Map<String, String>>() {
@@ -215,6 +208,7 @@ public abstract class TokenUtils extends AnalyticsUtils {
             if (!from.next_hash.equals(md5(key))) error(domain + " key is not right");
         }
 
+        String prev_hash = from.next_hash;
         if (from.delegate != null) {
             from.balance = round(from.balance - amount);
             setAccount(from);
@@ -230,7 +224,17 @@ public abstract class TokenUtils extends AnalyticsUtils {
         to.balance = round(to.balance + amount - fee);
         setAccount(to);
 
-        setTran(new Tran(domain, from_address, to_address, amount, fee, key, next_hash, delegate, time()));
+        setTran(new Tran(
+                domain,
+                from_address,
+                to_address,
+                amount,
+                fee,
+                key,
+                next_hash,
+                prev_hash,
+                delegate,
+                time()));
         return next_hash;
     }
 

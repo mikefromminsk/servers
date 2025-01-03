@@ -1,4 +1,4 @@
-package org.vavilon.wallet.analytics.model;
+package org.vavilon.analytics.model;
 
 public class Candle {
     public String period;

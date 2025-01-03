@@ -1,4 +1,4 @@
-package org.vavilon.wallet.analytics;
+package org.vavilon.analytics;
 
 public class Candles extends AnalyticsUtils {
     @Override

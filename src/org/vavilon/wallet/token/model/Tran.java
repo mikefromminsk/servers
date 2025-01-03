@@ -28,6 +28,7 @@ public class Tran implements BigArrayCell {
                 Double fee,
                 String key,
                 String next_hash,
+                String prev_hash,
                 String delegate,
                 Long time) {
         this.domain = domain;
@@ -37,6 +38,7 @@ public class Tran implements BigArrayCell {
         this.fee = fee;
         this.key = key;
         this.next_hash = next_hash;
+        this.prev_hash = prev_hash;
         this.delegate = delegate;
         this.time = time;
     }

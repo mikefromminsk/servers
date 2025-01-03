@@ -1,6 +1,6 @@
-package org.vavilon.wallet.analytics;
+package org.vavilon.analytics;
 
-import org.vavilon.wallet.analytics.model.Event;
+import org.vavilon.analytics.model.Event;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,7 +9,6 @@ public class Funnel extends AnalyticsUtils {
 
     class Step {
         String str;
-        String app;
         String name;
         String value;
         int count = 0;
@@ -17,14 +16,12 @@ public class Funnel extends AnalyticsUtils {
 
     private List<Step> parseFunnel(String funnel) {
         List<Step> steps = new ArrayList<>();
-        for (String stepStr : funnel.split(",")) {
+        for (String nameValueStr : funnel.split(",")) {
             Step step = new Step();
-            step.str = stepStr;
-            String[] appNameValue = stepStr.split(":");
-            step.app = appNameValue[0];
-            String[] nameValue = appNameValue.length > 1 ? appNameValue[1].split("=") : new String[]{"", ""};
+            step.str = nameValueStr;
+            String[] nameValue = nameValueStr.split("=");
             step.name = nameValue[0];
-            step.value = nameValue.length > 1 ? nameValue[1] : "";
+            step.value = nameValue.length > 1 ? nameValue[1] : null;
             steps.add(step);
         }
         return steps;
@@ -37,14 +34,14 @@ public class Funnel extends AnalyticsUtils {
 
         List<Step> parsedFunnel = parseFunnel(funnel);
         Step firstStep = parsedFunnel.remove(0);
-        List<Event> events = getEvents(firstStep.app, firstStep.name, firstStep.value, null, timeFrom, 10000L);
+        List<Event> events = getEvents(firstStep.name, firstStep.value, null, timeFrom, 10000L);
 
         firstStep.count = events.size();
 
         if (!events.isEmpty()) {
             for (Event event : events) {
                 for (Step step : parsedFunnel) {
-                    Event nextStep = getEvent(step.app, step.name, step.value, event.session, event.time);
+                    Event nextStep = getEvent(step.name, step.value, event.session);
                     if (nextStep != null) {
                         step.count += 1;
                     }
@@ -62,7 +59,9 @@ public class Funnel extends AnalyticsUtils {
         }
 
         parsedFunnel.add(0, firstStep);
-        Map<String, Integer> funnelMap = parsedFunnel.stream().collect(Collectors.toMap(step -> step.str, step -> step.count));
+        Map<String, Integer> funnelMap = new LinkedHashMap<>();
+        for (Step step : parsedFunnel)
+            funnelMap.put(step.str, step.count);
         response.put("funnel", funnelMap);
     }
 }
