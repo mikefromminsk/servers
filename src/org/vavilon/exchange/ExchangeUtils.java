@@ -10,7 +10,7 @@ import java.util.Map;
 
 import static org.vavilon.exchange.ExchangeServer.broadcast;
 import static org.vavilon.utils.Params.map;
-import static org.vavilon.data.Contract.GAS_DOMAIN;
+import static org.vavilon.contracts.Contract.GAS_DOMAIN;
 
 public abstract class ExchangeUtils extends TokenRequests {
 

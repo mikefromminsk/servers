@@ -15,11 +15,12 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Random;
 
-import static org.vavilon.data.mining.Miner.hashMod;
+import static org.vavilon.contracts.mining.Miner.hashMod;
 
 public class Utils {
-    public static Random random = new Random();
-    public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static final Random random = new Random();
+    public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static final long WEEK_SEC = 604800L;
 
     public static String md5(String input) {
         return MD5.hash(input);

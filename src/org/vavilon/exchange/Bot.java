@@ -3,7 +3,7 @@ package org.vavilon.exchange;
 import org.vavilon.utils.InfiniteTimer;
 
 import static org.vavilon.Node.broadcast;
-import static org.vavilon.data.Contract.GAS_DOMAIN;
+import static org.vavilon.contracts.Contract.GAS_DOMAIN;
 import static org.vavilon.utils.Params.map;
 
 public class Bot extends BotUtils {
@@ -18,7 +18,7 @@ public class Bot extends BotUtils {
         this.botAddress = BOT_PREFIX + domain;
         if (botScriptReg(domain, botAddress)) commitAccounts();
         secTimer = new InfiniteTimer(secBot, 1000, 1000 * 60 * 5);
-        minTimer = new InfiniteTimer(secBot, 1000 * 60, 1000 * 60 * 60 * 24 * 7);
+        minTimer = new InfiniteTimer(secBot, 1000 * 60, 1000 * (int) WEEK_SEC);
     }
 
     public void refreshTimers() {

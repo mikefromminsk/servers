@@ -1,6 +1,6 @@
-package org.vavilon.data.mining;
+package org.vavilon.contracts.mining;
 
-import org.vavilon.data.Contract;
+import org.vavilon.contracts.Contract;
 
 import java.math.BigInteger;
 

@@ -4,6 +4,7 @@ import com.metabrain.gdb.BigArray;
 import org.vavilon.servers.model.Endpoint;
 import org.vavilon.analytics.model.Candle;
 import org.vavilon.analytics.model.Event;
+import org.vavilon.token.model.Token;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +18,9 @@ public abstract class AnalyticsUtils extends Endpoint {
 
     public List<Event> newEvents = new ArrayList<>();
     public Map<String, Double> newCandles = new ConcurrentHashMap<>();
+
+    public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
+    public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
 
     static final Map<String, Long> periopdsSec = new HashMap<>();
 

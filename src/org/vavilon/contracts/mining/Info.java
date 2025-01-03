@@ -1,8 +1,8 @@
-package org.vavilon.data.mining;
+package org.vavilon.contracts.mining;
 
-import org.vavilon.data.Contract;
+import org.vavilon.contracts.Contract;
 
-import static org.vavilon.data.mining.Mint.REWARD_MULTIPLIER;
+import static org.vavilon.contracts.mining.Mint.REWARD_MULTIPLIER;
 
 public class Info extends Contract {
     @Override

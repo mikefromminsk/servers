@@ -1,7 +1,7 @@
 package org.vavilon;
 
 
-import org.vavilon.data.Contract;
+import org.vavilon.contracts.Contract;
 
 import java.util.Arrays;
 import java.util.List;

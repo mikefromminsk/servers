@@ -30,7 +30,7 @@ public class Funnel extends AnalyticsUtils {
     @Override
     public void run() {
         String funnel = getRequired("funnel");
-        long timeFrom = time() - 60 * 60 * 24 * 7;
+        long timeFrom = time() - WEEK_SEC;
 
         List<Step> parsedFunnel = parseFunnel(funnel);
         Step firstStep = parsedFunnel.remove(0);

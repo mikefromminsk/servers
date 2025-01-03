@@ -13,7 +13,7 @@ import com.metabrain.gdb.BigArray;
 import com.metabrain.gdb.BigMap;
 
 import static org.vavilon.Node.broadcast;
-import static org.vavilon.data.Contract.GAS_DOMAIN;
+import static org.vavilon.contracts.Contract.GAS_DOMAIN;
 
 public abstract class TokenUtils extends AnalyticsUtils {
     public static final String GENESIS_ADDRESS = "owner";
@@ -23,9 +23,6 @@ public abstract class TokenUtils extends AnalyticsUtils {
     public static final BigMap<Account> allAccounts = new BigMap<>("allAccounts", Account.class);
     private static final BigMap<Token> tokensByDomain = new BigMap<>("tokensByDomain", Token.class);
     private static final BigMap<SearchList> tokensSearch = new BigMap<>("tokensSearch", SearchList.class);
-
-    public static final PriorityQueue<Token> topExchange = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.volume24));
-    public static final PriorityQueue<Token> topGainers = new PriorityQueue<>(5, Comparator.comparingDouble(t -> t.price24 - t.price));
 
     Map<String, Account> accountsNew = new LinkedHashMap<>();
     List<Tran> transactionsNew = new ArrayList<>();

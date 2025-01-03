@@ -1,6 +1,6 @@
 package org.vavilon.token;
 
-import static org.vavilon.data.Contract.GAS_DOMAIN;
+import static org.vavilon.contracts.Contract.GAS_DOMAIN;
 import static org.vavilon.utils.Params.map;
 
 public abstract class TokenRequests extends TokenUtils {

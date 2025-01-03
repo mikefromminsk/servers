@@ -10,10 +10,10 @@ import org.vavilon.analytics.Candles;
 import org.vavilon.analytics.Events;
 import org.vavilon.analytics.Funnel;
 import org.vavilon.analytics.Track;
-import org.vavilon.data.mining.Info;
-import org.vavilon.data.mining.Miner;
-import org.vavilon.data.mining.Mint;
-import org.vavilon.data.wallet.Main;
+import org.vavilon.contracts.mining.Info;
+import org.vavilon.contracts.mining.Miner;
+import org.vavilon.contracts.mining.Mint;
+import org.vavilon.analytics.Main;
 import org.vavilon.token.*;
 import org.vavilon.token.tests.SumTokens;
 

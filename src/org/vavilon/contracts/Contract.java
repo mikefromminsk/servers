@@ -1,4 +1,4 @@
-package org.vavilon.data;
+package org.vavilon.contracts;
 
 import org.vavilon.token.TokenRequests;
 
