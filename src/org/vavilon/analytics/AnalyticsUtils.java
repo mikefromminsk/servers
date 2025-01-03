@@ -1,12 +1,9 @@
 package org.vavilon.analytics;
 
 import com.metabrain.gdb.BigArray;
-import com.metabrain.gdb.BigMap;
-import org.vavilon.analytics.model.EventLink;
 import org.vavilon.servers.model.Endpoint;
 import org.vavilon.analytics.model.Candle;
 import org.vavilon.analytics.model.Event;
-import org.vavilon.wallet.data.model.Field;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,8 +17,6 @@ public abstract class AnalyticsUtils extends Endpoint {
 
     public List<Event> newEvents = new ArrayList<>();
     public Map<String, Double> newCandles = new ConcurrentHashMap<>();
-
-
 
     static final Map<String, Long> periopdsSec = new HashMap<>();
 

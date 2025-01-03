@@ -2,7 +2,7 @@ package org.vavilon.exchange;
 
 import org.vavilon.servers.model.Endpoint;
 import org.vavilon.servers.model.Subscription;
-import org.vavilon.wallet.Node;
+import org.vavilon.Node;
 
 import java.io.IOException;
 import java.util.Map;

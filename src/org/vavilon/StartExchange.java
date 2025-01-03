@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 
-import static org.vavilon.wallet.Utils.disableCertificateValidation;
+import static org.vavilon.Utils.disableCertificateValidation;
 
 public class StartExchange {
 

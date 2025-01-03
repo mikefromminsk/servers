@@ -2,8 +2,8 @@ package org.vavilon.exchange;
 
 import org.vavilon.utils.InfiniteTimer;
 
-import static org.vavilon.wallet.Node.broadcast;
-import static org.vavilon.wallet.data.Contract.GAS_DOMAIN;
+import static org.vavilon.Node.broadcast;
+import static org.vavilon.data.Contract.GAS_DOMAIN;
 import static org.vavilon.utils.Params.map;
 
 public class Bot extends BotUtils {

@@ -1,7 +1,7 @@
 package org.vavilon.exchange;
 
-import org.vavilon.wallet.token.TokenRequests;
-import org.vavilon.wallet.token.model.Token;
+import org.vavilon.token.TokenRequests;
+import org.vavilon.token.model.Token;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +10,7 @@ import java.util.Map;
 
 import static org.vavilon.exchange.ExchangeServer.broadcast;
 import static org.vavilon.utils.Params.map;
-import static org.vavilon.wallet.data.Contract.GAS_DOMAIN;
+import static org.vavilon.data.Contract.GAS_DOMAIN;
 
 public abstract class ExchangeUtils extends TokenRequests {
 

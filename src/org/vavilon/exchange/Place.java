@@ -2,7 +2,7 @@ package org.vavilon.exchange;
 
 import static org.vavilon.exchange.BotUtils.BOT_PREFIX;
 import static org.vavilon.utils.Params.map;
-import static org.vavilon.wallet.Node.broadcast;
+import static org.vavilon.Node.broadcast;
 
 public class Place extends ExchangeUtils {
     @Override

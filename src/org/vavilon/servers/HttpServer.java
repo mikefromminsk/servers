@@ -8,8 +8,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 
-import static org.vavilon.wallet.Utils.*;
-import static org.vavilon.wallet.Utils.gson;
+import static org.vavilon.Utils.*;
+import static org.vavilon.Utils.gson;
 import static fi.iki.elonen.NanoHTTPD.Response.Status.INTERNAL_ERROR;
 import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 

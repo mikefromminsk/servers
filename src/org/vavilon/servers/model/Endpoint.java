@@ -1,7 +1,7 @@
 package org.vavilon.servers.model;
 
 
-import org.vavilon.wallet.Utils;
+import org.vavilon.Utils;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
