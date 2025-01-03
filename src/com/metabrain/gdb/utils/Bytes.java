@@ -11,6 +11,11 @@ public class Bytes {
     private byte[] bytes;
     private int position;
 
+    public Bytes() {
+        this.bytes = new byte[0];
+        this.position = 0;
+    }
+
     public Bytes(byte[] bytes) {
         this.bytes = bytes;
         this.position = 0;
@@ -170,5 +175,25 @@ public class Bytes {
 
     public long[] readLongArray() {
         return toLongArray(bytes);
+    }
+
+    public void addBytes(byte[] bytes) {
+        this.bytes = Bytes.concat(this.bytes, bytes);
+    }
+
+    public void addString32(String string) {
+        addBytes(Bytes.fromString(string, String32.BYTES));
+    }
+
+    public void addDouble(Double value) {
+        addBytes(Bytes.fromDouble(value));
+    }
+
+    public void addLong(Long value) {
+        addBytes(Bytes.fromLong(value));
+    }
+
+    public byte[] toByteArray() {
+        return bytes;
     }
 }
